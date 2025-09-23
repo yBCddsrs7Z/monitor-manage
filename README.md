@@ -11,11 +11,14 @@ When one monitor set is enabled, the monitors in the other set are disabled. In 
 | alt+3    | Toggle between the two sets |
 
 ## prereqs
-Requires [DisplayConfig@5.0.0](https://www.powershellgallery.com/packages/DisplayConfig/5.0.0)
+- Requires [DisplayConfig@5.0.0](https://www.powershellgallery.com/packages/DisplayConfig/5.0.0)
+- Require `AudioDeviceCmdlets` - `Install-Module -Name AudioDeviceCmdlets -Repository PSGallery -Force`
+- Requires jq - `winget install jqlang.jq`
 
 Can be configured to be triggered with SteamInput!
 
 Also should be set up as a script on startup:
+- Fill desired audio devices into `config.json` by retrieving name through `Get-AudioDevice -List`
 - Create shortcut of monitor-toggle.ahk
 - Ensure AHK is used to automatically open the shortcut
 - Open startup folder with Win+R `shell:startup`

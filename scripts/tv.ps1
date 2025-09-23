@@ -1,3 +1,4 @@
-Enable-Display 3
 Disable-Display 1
-Disable-Display 2
+$deviceName = (Get-Content -Path  "$([Environment]::GetFolderPath("MyDocuments"))/monitor-manage/config.json" | ConvertFrom-Json).tvAudio
+$deviceIndex = (Get-AudioDevice -List | Where-Object { $_.Name -eq $deviceName }).Index
+Set-AudioDevice -Index $deviceIndex
