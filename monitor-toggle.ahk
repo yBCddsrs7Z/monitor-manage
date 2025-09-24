@@ -1,36 +1,46 @@
 ﻿#Requires AutoHotkey v2.0
+#Include %A_LineFile%\..\_JXON.ahk
 
 scriptsDir := A_MyDocuments "\monitor-manage\scripts"
-desktop_active := scriptsDir "\desktop_active"
-tv_active := scriptsDir "\tv_active"
+active_profile := scriptsDir "\active_profile"
+config_file := scriptsDir "\..\config.json"
 
-!1:: { ; Alt+1 hotkey
-    Run('powershell -ExecutionPolicy Bypass -File "' scriptsDir '\desktop.ps1"')
-    FileAppend("", desktop_active)
-    if FileExist(tv_active) {
-        FileDelete(tv_active)
-    }
+configCount := GetHighestConfigIndex()
+
+; Register Alt+1 through Alt+n
+Loop configCount {
+    Hotkey("!" . A_Index, SetConfig.Bind(String(A_Index)))
 }
 
-!2:: { ; Alt+2 hotkey
-    Run('powershell -ExecutionPolicy Bypass -File "' scriptsDir '\tv.ps1"')
-    FileAppend("", tv_active)
-    if FileExist(desktop_active) {
-        FileDelete(desktop_active)
-    }
+; Register Alt+0
+Hotkey("!0", CycleConfigs)
+
+SetConfig(controlGroup, hotkeyName) {
+    Run('powershell -ExecutionPolicy Bypass -File "' scriptsDir '\switch_control_group.ps1" ' controlGroup)
+    FileDelete(active_profile)
+    FileAppend(controlGroup, active_profile)
 }
 
-!3:: { ; Alt+3 hotkey
-    if FileExist(tv_active) {
-        Run('powershell -ExecutionPolicy Bypass -File "' scriptsDir '\desktop.ps1"')
-        FileAppend("", desktop_active)
-        FileDelete(tv_active)
-    } else if FileExist(desktop_active) {
-        Run('powershell -ExecutionPolicy Bypass -File "' scriptsDir '\tv.ps1"')
-        FileAppend("", tv_active)
-        FileDelete(desktop_active)
-    } else {
-        Run('powershell -ExecutionPolicy Bypass -File "' scriptsDir '\desktop.ps1"')
-        FileAppend("", desktop_active)
+CycleConfigs(hk) { ; Alt+0 cycle hotkey
+    if !FileExist(active_profile) {
+        SetConfig("1", hk)
     }
+    currentGroup := Integer(FileRead(active_profile))
+    newConfig := currentGroup + 1
+    if newConfig > configCount {
+        newConfig := 1
+    }
+    SetConfig(String(newConfig), hk)
+}
+
+GetHighestConfigIndex() {
+    config_data := FileRead(config_file)
+    config := jxon_load(&config_data)
+    maxKey := 0
+    for key, value in config {
+        num := Integer(key)   ; convert "1" → 1
+        if (num > maxKey)
+            maxKey := num
+    }
+    return maxKey
 }

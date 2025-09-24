@@ -13,7 +13,6 @@ When one monitor set is enabled, the monitors in the other set are disabled. In 
 ## prereqs
 - Requires [DisplayConfig@5.0.0](https://www.powershellgallery.com/packages/DisplayConfig/5.0.0)
 - Require `AudioDeviceCmdlets` - `Install-Module -Name AudioDeviceCmdlets -Repository PSGallery -Force`
-- Requires jq - `winget install jqlang.jq`
 
 Can be configured to be triggered with SteamInput!
 

@@ -1,4 +1,36 @@
 {
-    "desktopAudio": "Speakers (5- ODAC-revB USB DAC)",
-    "tvAudio": "LG TV SSCR2 (NVIDIA High Definition Audio)"
+  "1": {
+    "audio": "Speakers (5- ODAC-revB USB DAC)",
+    "activeDisplays": [
+      "AW2725DF"
+    ],
+    "disableDisplays": [
+      "LG TV SSCR2"
+    ]
+  },
+  "2": {
+    "audio": "Speakers (5- ODAC-revB USB DAC)",
+    "activeDisplays": [
+      "AW2725DF",
+      "LG TV SSCR2"
+    ],
+    "disableDisplays": []
+  },
+  "3": {
+    "audio": "LG TV SSCR2 (NVIDIA High Definition Audio)",
+    "activeDisplays": [
+      "AW2725DF",
+      "LG TV SSCR2"
+    ],
+    "disableDisplays": []
+  },
+  "4": {
+    "audio": "LG TV SSCR2 (NVIDIA High Definition Audio)",
+    "activeDisplays": [
+      "LG TV SSCR2"
+    ],
+    "disableDisplays": [
+      "AW2725DF"
+    ]
+  }
 }
