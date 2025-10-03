@@ -1,2 +1,4 @@
 /scripts/active_profile
 config_*.json
+monitor-toggle.log
+devices_snapshot.json
