@@ -62,7 +62,7 @@ Hotkeys are registered dynamically based on the highest numeric key in `config.j
 
 ## Testing
 
-This project has comprehensive test coverage with **41 passing tests** and automated CI/CD.
+This project has comprehensive test coverage with **50 passing tests** including integration tests and automated CI/CD.
 
 - **Quick Start**: `pwsh -File tests/run-all-tests.ps1`
 - **Complete Guide**: See [TESTING.md](TESTING.md) for full testing documentation
@@ -70,8 +70,9 @@ This project has comprehensive test coverage with **41 passing tests** and autom
 - **CI/CD**: Automated testing via GitHub Actions on every push/PR
 - **Performance**: Profile with `pwsh -File tests/Profile-Performance.ps1`
 
-**Test Results**: 41/41 passing ✅
+**Test Results**: 50/50 passing ✅
 - ConfigureControlGroups: 17/17 (device inventory, merging, edge cases)
+- ConfigureControlGroupsIntegration: 9/9 (**NEW** - array unwrapping, _documentation filtering)
 - SwitchControlGroup: 13/13 (resolution, normalization, edge cases)
 - ExportDevices: 4/4 (property retrieval, JSON validation)
 - ValidateConfig: 7/7 (schema validation, error detection)

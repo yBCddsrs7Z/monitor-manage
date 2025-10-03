@@ -185,6 +185,11 @@ function Set-HotkeyGroupDefaults {
     $groupMap = ConvertTo-OrderedMap $current['groups']
 
     foreach ($key in @($groupMap.Keys)) {
+        # Skip documentation and metadata keys (starting with _)
+        if ($key -match '^_') {
+            $groupMap.Remove($key)
+            continue
+        }
         $groupMap[$key] = Set-HotkeyDescriptorNormalized $groupMap[$key]
     }
 
@@ -279,6 +284,9 @@ function Get-ConfigData {
     $result = [System.Collections.Specialized.OrderedDictionary]::new()
 
     foreach ($key in $controlGroupSource.Keys) {
+        # Skip documentation and metadata keys (starting with _)
+        if ($key -match '^_') { continue }
+        
         $groupValue = $controlGroupSource[$key]
         $result[$key] = [ordered]@{
             activeDisplays  = ConvertTo-DisplayReferenceArray @($groupValue.activeDisplays)
@@ -303,6 +311,9 @@ function Save-ConfigData {
 
     $exportGroups = [ordered]@{}
     foreach ($key in $Config.Keys) {
+        # Skip documentation and metadata keys (starting with _)
+        if ($key -match '^_') { continue }
+        
         $group = $Config[$key]
         $activeRefs = ConvertTo-DisplayReferenceArray @($group.activeDisplays)
         $disableRefs = ConvertTo-DisplayReferenceArray @($group.disableDisplays)
@@ -1079,6 +1090,9 @@ function Get-ControlGroupEntries {
 
     $entries = @()
     foreach ($key in ($Config.Keys | Sort-Object {[int]::TryParse($_,[ref]$null); $_})) {
+        # Skip documentation and metadata keys (starting with _)
+        if ($key -match '^_') { continue }
+        
         $group = $Config[$key]
         $entries += New-SelectionItem -Label (Get-ControlGroupDescription -Key $key -Group $group) -Value $key
     }
@@ -1450,11 +1464,18 @@ function Show-ControlGroupSummary {
     )
 
     Write-Host "`nCurrent control groups:" -ForegroundColor Cyan
-    if ($Config.Keys.Count -eq 0) {
+    
+    # Count non-documentation groups
+    $validKeys = @($Config.Keys | Where-Object { $_ -notmatch '^_' })
+    if ($validKeys.Count -eq 0) {
         Write-Host "  (no control groups defined)" -ForegroundColor Yellow
         return
     }
+    
     foreach ($key in ($Config.Keys | Sort-Object {[int]::TryParse($_,[ref]$null); $_})) {
+        # Skip documentation and metadata keys (starting with _)
+        if ($key -match '^_') { continue }
+        
         $group = $Config[$key]
         Write-Host ("  {0}" -f (Get-ControlGroupDescription -Key $key -Group $group))
     }

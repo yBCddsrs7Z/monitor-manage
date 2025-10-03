@@ -36,6 +36,13 @@ pwsh -File tests/RunTests.ps1
 - **ConvertTo-NameArray**: Name extraction and filtering
 - **Get-UniqueDisplayReferences**: Deduplication logic with edge cases (null, empty arrays)
 
+### ConfigureControlGroupsIntegration.Tests.ps1 (9 tests) **NEW**
+- **Array unwrapping prevention**: Tests single control group scenarios that previously caused errors
+- **Documentation key filtering**: Ensures `_documentation` keys are filtered from all operations
+- **Config loading/saving**: Tests that `_documentation` doesn't create invalid hotkeys
+- **Empty config handling**: Validates graceful handling of empty configurations
+- **Hotkey normalization**: Tests removal of `_documentation` from hotkeys.groups
+
 ### SwitchControlGroup.Tests.ps1 (13 tests)
 - **Resolve-DisplayIdentifiers**: Display resolution by name, normalized name, and ID
 - **ConvertTo-DisplayReferenceArray**: Array conversion for display references
@@ -64,9 +71,10 @@ Each test file sets `$env:MONITOR_MANAGE_SUPPRESS_MAIN='1'` to prevent execution
 - PowerShell 5.1 or PowerShell 7+
 
 ## Test Results
-Last run: All 41 tests passing ✅
-- ConfigureControlGroups: 17/17 passed (+2 edge cases)
-- SwitchControlGroup: 13/13 passed (+3 edge cases)
+Last run: All 50 tests passing ✅
+- ConfigureControlGroups: 17/17 passed (unit tests)
+- ConfigureControlGroupsIntegration: 9/9 passed (integration tests) **NEW**
+- SwitchControlGroup: 13/13 passed (with edge cases)
 - ExportDevices: 4/4 passed
 - ValidateConfig: 7/7 passed
 
