@@ -1082,7 +1082,7 @@ function Get-ControlGroupEntries {
         $group = $Config[$key]
         $entries += New-SelectionItem -Label (Get-ControlGroupDescription -Key $key -Group $group) -Value $key
     }
-    return $entries
+    return @($entries)
 }
 
 function Get-NextControlGroupKey {
