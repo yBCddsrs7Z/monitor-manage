@@ -1,8 +1,8 @@
 [CmdletBinding(DefaultParameterSetName = 'Group')]
 param(
-    [Parameter(Mandatory = $true, ParameterSetName = 'Group')]
-    [string]$ControlGroup,
-    [Parameter(Mandatory = $true, ParameterSetName = 'All')]
+    [Parameter(Mandatory = $false, ParameterSetName = 'Group')]
+    [string]$ControlGroup = '',
+    [Parameter(Mandatory = $false, ParameterSetName = 'All')]
     [switch]$ActivateAll
 )
 
@@ -86,12 +86,6 @@ function Get-DisplaysFromSnapshotFile {
         }
     }
     return @($results)
-}
-
-if ($PSCmdlet.ParameterSetName -eq 'All') {
-    Write-Log -Message "Switch requested to activate all displays."
-} else {
-    Write-Log -Message "Switch requested for control group '$ControlGroup'."
 }
 
 function Import-LatestModule {
@@ -434,12 +428,26 @@ function Set-AudioDeviceByName {
         throw "Set-AudioDevice command does not expose Id, Index, or Name parameters."
     }
 }
-{{ ... }}
-
+# Main execution logic starts here
+# Skip if being loaded for testing
 if ($env:MONITOR_MANAGE_SUPPRESS_SWITCH -eq '1') {
     return
 }
-{{ ... }}
+
+# Validate parameters when running normally
+if (-not $ControlGroup -and -not $ActivateAll) {
+    Write-Error "Either -ControlGroup or -ActivateAll parameter is required."
+    exit 1
+}
+
+# Log the request
+if ($PSCmdlet.ParameterSetName -eq 'All') {
+    Write-Log -Message "Switch requested to activate all displays."
+} else {
+    Write-Log -Message "Switch requested for control group '$ControlGroup'."
+}
+
+# Execute the appropriate action
 if ($PSCmdlet.ParameterSetName -eq 'All') {
     try {
         $knownDisplays = Get-DisplaySnapshot

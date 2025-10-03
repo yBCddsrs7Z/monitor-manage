@@ -18,9 +18,14 @@ Write-Host "Running ExportDevices.Tests.ps1" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 $result3 = Invoke-Pester -Path (Join-Path $PSScriptRoot 'ExportDevices.Tests.ps1') -PassThru
 
-$totalPassed = $result1.PassedCount + $result2.PassedCount + $result3.PassedCount
-$totalFailed = $result1.FailedCount + $result2.FailedCount + $result3.FailedCount
-$totalSkipped = $result1.SkippedCount + $result2.SkippedCount + $result3.SkippedCount
+Write-Host "`n========================================" -ForegroundColor Cyan
+Write-Host "Running ValidateConfig.Tests.ps1" -ForegroundColor Cyan
+Write-Host "========================================`n" -ForegroundColor Cyan
+$result4 = Invoke-Pester -Path (Join-Path $PSScriptRoot 'ValidateConfig.Tests.ps1') -PassThru
+
+$totalPassed = $result1.PassedCount + $result2.PassedCount + $result3.PassedCount + $result4.PassedCount
+$totalFailed = $result1.FailedCount + $result2.FailedCount + $result3.FailedCount + $result4.FailedCount
+$totalSkipped = $result1.SkippedCount + $result2.SkippedCount + $result3.SkippedCount + $result4.SkippedCount
 
 Write-Host "`n========================================" -ForegroundColor Yellow
 Write-Host "OVERALL TEST RESULTS" -ForegroundColor Yellow
