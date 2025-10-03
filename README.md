@@ -2,7 +2,7 @@
 
 AutoHotkey automation that presents hotkeys for switching between display/audio layouts, with an optional overlay showing layouts and hotkeys.
 
-**Original code** by [Matt Drayton](https://github.com/matt-drayton)
+**Original code** by [Matt Drayton](https://github.com/matt-drayton), vibed with Claude Sonnet 4.5 Thinking
 
 ## Overview
 `monitor-manage` lets you toggle between customizable monitor and audio "control groups" with AutoHotkey hotkeys. The AutoHotkey entry point (`monitor-toggle.ahk`) invokes the PowerShell helpers in `scripts/` to capture the current device inventory, resolve the displays you named in `config.json`, and call the `DisplayConfig` / `AudioDeviceCmdlets` modules to apply the requested state. Each switch now refreshes `devices_snapshot.json` automatically so the configuration survives changing display identifiers and lid-close scenarios.
