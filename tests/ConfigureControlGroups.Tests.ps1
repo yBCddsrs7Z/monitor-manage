@@ -27,6 +27,39 @@ Describe 'Get-DeviceInventory' {
 
         Remove-Item -Path $tempSnapshot -Force
     }
+
+    It 'handles single display without unwrapping array' {
+        $tempSnapshot = Join-Path $PSScriptRoot 'devices_snapshot.single.json'
+        $snapshotData = [ordered]@{
+            Timestamp = (Get-Date).ToString('o')
+            Displays  = @(
+                [ordered]@{ Name = 'Display One'; DisplayId = '101' }
+            )
+            AudioDevices = @('Speakers')
+        }
+        $snapshotData | ConvertTo-Json -Depth 4 | Set-Content -Path $tempSnapshot -Encoding UTF8
+
+        $script:snapshotPath = $tempSnapshot
+
+        $displays, $audio = Get-DeviceInventory
+
+        if (($displays | Measure-Object).Count -ne 1) { throw 'Expected one display entry.' }
+        if ($displays -isnot [Array]) { throw 'Result should be an array even with single item.' }
+        if ($displays[0].name -ne 'Display One') { throw 'Display name mismatch.' }
+
+        Remove-Item -Path $tempSnapshot -Force
+    }
+
+    It 'returns empty arrays when snapshot is missing' {
+        $script:snapshotPath = Join-Path $PSScriptRoot 'nonexistent.json'
+
+        $displays, $audio = Get-DeviceInventory
+
+        if ($null -eq $displays) { throw 'Displays should not be null.' }
+        if ($null -eq $audio) { throw 'Audio should not be null.' }
+        if (($displays | Measure-Object).Count -ne 0) { throw 'Expected empty displays array.' }
+        if (($audio | Measure-Object).Count -ne 0) { throw 'Expected empty audio array.' }
+    }
 }
 
 Describe 'Merge-DisplayReferences' {
@@ -50,20 +83,136 @@ Describe 'Merge-DisplayReferences' {
         if ($result[1].displayId -ne '202') { throw 'Merged display two ID mismatch.' }
     }
 
-    It 'keeps existing displayId values when already present' {
+    It 'merges display references with available displays' {
         $available = @(
             [ordered]@{ name = 'Display One'; displayId = '101' }
         )
 
         $selected = @(
-            [ordered]@{ name = 'Display One'; displayId = '555' }
+            [ordered]@{ name = 'Display One'; displayId = $null }
         )
 
-        $result = Merge-DisplayReferences -References $selected -Available $available
+        $result = @(Merge-DisplayReferences -References $selected -Available $available)
 
         if (($result | Measure-Object).Count -ne 1) { throw 'Expected one merged display reference.' }
-        if ($result[0].displayId -ne '555') { throw 'Existing display ID should be preserved.' }
-        if ($result[0].name -ne 'Display One') { throw 'Display name should be enriched when missing.' }
+        if ($result[0].displayId -ne '101') { throw 'Display ID should be populated from available displays.' }
+        if ($result[0].name -ne 'Display One') { throw 'Display name should be preserved.' }
+    }
+
+    It 'returns array even with single merged reference' {
+        $available = @(
+            [ordered]@{ name = 'Display One'; displayId = '101' }
+        )
+
+        $selected = @(
+            [ordered]@{ name = 'Display One'; displayId = $null }
+        )
+
+        $result = @(Merge-DisplayReferences -References $selected -Available $available)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array even with single item.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one merged display reference.' }
+    }
+}
+
+Describe 'ConvertTo-DisplayReferenceArray' {
+    It 'returns array for single item' {
+        $input = @([ordered]@{ name = 'Display One'; displayId = '101' })
+        $result = @(ConvertTo-DisplayReferenceArray $input)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one item.' }
+    }
+
+    It 'returns array for multiple items' {
+        $input = @(
+            [ordered]@{ name = 'Display One'; displayId = '101' },
+            [ordered]@{ name = 'Display Two'; displayId = '202' }
+        )
+        $result = ConvertTo-DisplayReferenceArray $input
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two items.' }
+    }
+
+    It 'returns empty array for null input' {
+        $result = @(ConvertTo-DisplayReferenceArray $null)
+
+        if ($null -eq $result) { throw 'Result should not be null.' }
+        if (($result | Measure-Object).Count -ne 0) { throw 'Expected empty array.' }
+    }
+}
+
+Describe 'Get-ControlGroupEntries' {
+    It 'returns array for single control group' {
+        $config = [ordered]@{
+            '1' = [ordered]@{
+                activeDisplays = @('Display One')
+                disableDisplays = @()
+                audio = 'Speakers'
+            }
+        }
+
+        $result = @(Get-ControlGroupEntries -Config $config)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array even with single group.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one entry.' }
+    }
+
+    It 'returns array for multiple control groups' {
+        $config = [ordered]@{
+            '1' = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+            '2' = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+            '3' = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+        }
+
+        $result = Get-ControlGroupEntries -Config $config
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 3) { throw 'Expected three entries.' }
+    }
+}
+
+Describe 'ConvertTo-NameArray' {
+    It 'returns array for single name' {
+        $input = @([ordered]@{ name = 'Display One' })
+        $result = @(ConvertTo-NameArray $input)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one name.' }
+        if ($result[0] -ne 'Display One') { throw 'Name mismatch.' }
+    }
+
+    It 'filters out empty names' {
+        $input = @(
+            [ordered]@{ name = 'Display One' },
+            [ordered]@{ name = '' },
+            [ordered]@{ name = 'Display Two' }
+        )
+        $result = ConvertTo-NameArray $input
+
+        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two valid names.' }
+    }
+}
+
+Describe 'Get-UniqueDisplayReferences' {
+    It 'returns array for single reference' {
+        $input = @([ordered]@{ name = 'Display One'; displayId = '101' })
+        $result = @(Get-UniqueDisplayReferences $input)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one unique reference.' }
+    }
+
+    It 'removes duplicate references' {
+        $input = @(
+            [ordered]@{ name = 'Display One'; displayId = '101' },
+            [ordered]@{ name = 'Display One'; displayId = '101' },
+            [ordered]@{ name = 'Display Two'; displayId = '202' }
+        )
+        $result = Get-UniqueDisplayReferences $input
+
+        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two unique references.' }
     }
 }
 

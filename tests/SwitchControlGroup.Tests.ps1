@@ -44,6 +44,91 @@ Describe 'Resolve-DisplayIdentifiers' {
         if ($result.Ids[0] -ne 202) { throw 'Resolved normalized display identifier mismatch.' }
         if ($result.Missing.Count -ne 0) { throw 'Normalized match should yield no missing displays.' }
     }
+
+    It 'reports missing displays when not found' {
+        $knownDisplays = @(
+            [pscustomobject]@{
+                DisplayId       = 101
+                Name            = 'Display One'
+                NormalizedName  = Get-NormalizedDisplayName -Name 'Display One'
+                Active          = $true
+            }
+        )
+
+        $references = @(
+            [ordered]@{ name = 'Unknown Display'; displayId = $null }
+        )
+
+        $result = Resolve-DisplayIdentifiers -References $references -KnownDisplays $knownDisplays
+
+        if ($result.Ids.Length -ne 0) { throw 'Expected no resolved IDs for unknown display.' }
+        if ($result.Missing.Count -ne 1) { throw 'Expected one missing display.' }
+    }
+}
+
+Describe 'ConvertTo-DisplayReferenceArray' {
+    It 'returns array for single display reference' {
+        $input = @([ordered]@{ name = 'Display One'; displayId = '101' })
+        $result = @(ConvertTo-DisplayReferenceArray $input)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one item.' }
+    }
+
+    It 'returns array for multiple display references' {
+        $input = @(
+            [ordered]@{ name = 'Display One'; displayId = '101' },
+            [ordered]@{ name = 'Display Two'; displayId = '202' }
+        )
+        $result = ConvertTo-DisplayReferenceArray $input
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two items.' }
+    }
+}
+
+Describe 'Get-DisplaysFromSnapshotFile' {
+    It 'returns array for single display in snapshot' {
+        $tempSnapshot = Join-Path $PSScriptRoot 'snapshot.single.json'
+        $snapshotData = [ordered]@{
+            Timestamp = (Get-Date).ToString('o')
+            Displays  = @(
+                [ordered]@{ Name = 'Display One'; DisplayId = '101' }
+            )
+        }
+        $snapshotData | ConvertTo-Json -Depth 4 | Set-Content -Path $tempSnapshot -Encoding UTF8
+
+        $result = @(Get-DisplaysFromSnapshotFile -SnapshotPath $tempSnapshot)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array even with single display.' }
+        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one display.' }
+
+        Remove-Item -Path $tempSnapshot -Force
+    }
+
+    It 'returns empty array for missing snapshot file' {
+        $result = @(Get-DisplaysFromSnapshotFile -SnapshotPath 'nonexistent.json')
+
+        if ($null -eq $result) { throw 'Result should not be null.' }
+        if (($result | Measure-Object).Count -ne 0) { throw 'Expected empty array.' }
+    }
+}
+
+Describe 'Get-NormalizedDisplayName' {
+    It 'normalizes display name by removing spaces and special characters' {
+        $result = Get-NormalizedDisplayName -Name 'HX Armada 27'
+        if ($result -ne 'hxarmada27') { throw 'Normalization failed.' }
+    }
+
+    It 'normalizes display name with hyphens' {
+        $result = Get-NormalizedDisplayName -Name 'NE160WUM-NX2'
+        if ($result -ne 'ne160wumnx2') { throw 'Normalization with hyphen failed.' }
+    }
+
+    It 'returns null for empty string' {
+        $result = Get-NormalizedDisplayName -Name ''
+        if ($null -ne $result) { throw 'Expected null for empty name.' }
+    }
 }
 
 Remove-Item Env:MONITOR_MANAGE_SUPPRESS_SWITCH -ErrorAction SilentlyContinue

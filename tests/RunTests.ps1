@@ -6,6 +6,7 @@ try {
     $testScripts = @(
         (Join-Path $PSScriptRoot 'ConfigureControlGroups.Tests.ps1')
         (Join-Path $PSScriptRoot 'SwitchControlGroup.Tests.ps1')
+        (Join-Path $PSScriptRoot 'ExportDevices.Tests.ps1')
     )
     Invoke-Pester -Script $testScripts -EnableExit
 } finally {

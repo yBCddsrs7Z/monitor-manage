@@ -2,3 +2,10 @@
 config_*.json
 monitor-toggle.log
 devices_snapshot.json
+
+# Test artifacts
+tests/*.xml
+tests/*.txt
+tests/debug-*.ps1
+tests/devices_snapshot.*.json
+tests/snapshot.*.json
