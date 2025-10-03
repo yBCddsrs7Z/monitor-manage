@@ -11,13 +11,15 @@
   - `scripts/export_devices.ps1`: `Get-DisplaySnapshot`, `Get-AudioSnapshot`
 
 ### Testing
-- **Comprehensive test suite:** Added 29 passing tests across all PowerShell scripts:
+- **Comprehensive test suite:** Added 36 passing tests across all PowerShell scripts:
   - `tests/ConfigureControlGroups.Tests.ps1`: 15 tests covering device inventory, display reference merging, array handling, and control group operations
   - `tests/SwitchControlGroup.Tests.ps1`: 10 tests covering display resolution, normalization, snapshot parsing, and array conversion
   - `tests/ExportDevices.Tests.ps1`: 4 tests covering property retrieval and JSON structure validation
+  - `tests/ValidateConfig.Tests.ps1`: 7 tests covering config.json schema validation
 - **Test infrastructure:** Created `tests/run-all-tests.ps1` for unified test execution with detailed reporting
 - **Test documentation:** Added `tests/README.md` with usage instructions and coverage details
 - **Test artifacts:** Updated `.gitignore` to exclude temporary test files
+- **Script testability:** Made parameters optional in `switch_control_group.ps1` and `Validate-Config.ps1` for automated testing
 
 ### Documentation
 - **README hotkey updates:** Updated all hotkey references from `Alt+Shift` to `Left Alt+Left Shift` to match current defaults.
@@ -25,6 +27,14 @@
 - **Original attribution:** Added proper attribution to Matt Drayton's original work.
 
 ### Enhancements
+- **Config validation:** Added `scripts/Validate-Config.ps1` for validating config.json structure and values
+  - Validates required top-level keys (controlGroups, hotkeys, overlay)
+  - Validates control group structure (activeDisplays, disableDisplays, audio fields)
+  - Validates overlay settings (opacity range, position values, font sizes)
+  - Returns detailed errors and warnings
+- **Shared utilities:** Created `scripts/Common.ps1` with reusable functions for future refactoring
+  - Includes logging, module management, display name normalization, and property utilities
+  - Ready for integration to eliminate code duplication across scripts
 - **Hotkey normalization:** Enhanced descriptor parsing to handle `Left/Right` modifier prefixes with space normalization.
 - **Error handling:** Improved PowerShell module installation flow with better error messages.
 
