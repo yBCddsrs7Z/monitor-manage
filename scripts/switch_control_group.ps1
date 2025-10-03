@@ -297,7 +297,14 @@ function Get-DisplaySnapshot {
 
     Import-LatestModule -Name 'DisplayConfig'
 
-    $command = Get-Command -Name 'Get-DisplayConfig' -ErrorAction Stop
+    # Try Get-DisplayConfig first (has more complete info)
+    $command = Get-Command -Name 'Get-DisplayConfig' -ErrorAction SilentlyContinue
+    if ($null -eq $command) {
+        # Fall back to Get-DisplayInfo if Get-DisplayConfig doesn't exist
+        $command = Get-Command -Name 'Get-DisplayInfo' -ErrorAction Stop
+        Write-Log -Message "Using Get-DisplayInfo (Get-DisplayConfig not available)." -Level 'INFO'
+    }
+    
     for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
         $displays = & $command
         $results = @()
@@ -319,6 +326,35 @@ function Get-DisplaySnapshot {
                 Name            = $nameValue
                 NormalizedName  = Get-NormalizedDisplayName -Name $nameValue
                 Active          = $isActive
+            }
+        }
+
+        # If Get-DisplayConfig returned nothing, try Get-DisplayInfo as fallback
+        if ($results.Count -eq 0 -and $command.Name -eq 'Get-DisplayConfig') {
+            Write-Log -Message "Get-DisplayConfig returned no displays, trying Get-DisplayInfo fallback..." -Level 'WARN'
+            $fallbackCommand = Get-Command -Name 'Get-DisplayInfo' -ErrorAction SilentlyContinue
+            if ($fallbackCommand) {
+                $displays = & $fallbackCommand
+                foreach ($display in $displays) {
+                    $state = Get-PropertyValue $display @('IsActive','Enabled','Active','State')
+                    $isActive = $false
+                    if ($null -ne $state) {
+                        if ($state -is [bool]) {
+                            $isActive = [bool]$state
+                        } elseif ($state -is [string]) {
+                            $isActive = ($state -match 'active')
+                        }
+                    }
+
+                    $nameValue = Get-PropertyValue $display @('Name','DisplayName','FriendlyName','MonitorName','DisplayFriendlyName')
+
+                    $results += [pscustomobject]@{
+                        DisplayId       = Get-PropertyValue $display @('DisplayId','Id','PathId','TargetId')
+                        Name            = $nameValue
+                        NormalizedName  = Get-NormalizedDisplayName -Name $nameValue
+                        Active          = $isActive
+                    }
+                }
             }
         }
 

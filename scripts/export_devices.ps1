@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$OutputPath
 )
 
@@ -16,6 +16,11 @@ $ErrorActionPreference = 'Stop'
 $scriptDir = Split-Path -Parent $PSCommandPath
 $repoRoot = Resolve-Path (Join-Path $scriptDir '..')
 $logPath = Join-Path $repoRoot 'monitor-toggle.log'
+
+# Default output path if not specified
+if (-not $OutputPath) {
+    $OutputPath = Join-Path $repoRoot 'devices_snapshot.json'
+}
 
 function Import-LatestModule {
     param(
