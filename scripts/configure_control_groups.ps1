@@ -1550,7 +1550,7 @@ function Remove-ControlGroup {
         return $false
     }
 
-    $entries = Get-ControlGroupEntries -Config $Config
+    $entries = @(Get-ControlGroupEntries -Config $Config)
     $context = @("Select the control group to remove.", "Press Esc to cancel.")
     $selection = Invoke-InteractiveSelection -Items $entries -Prompt "Choose a control group to remove" -CurrentValues @() -ContextLines $context
     if ($script:SelectionCancelled -or $null -eq $selection) {
@@ -1614,7 +1614,7 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
                     continue
                 }
 
-                $entries = Get-ControlGroupEntries -Config $config
+                $entries = @(Get-ControlGroupEntries -Config $config)
                 $context = @('Choose a control group to edit.', 'Press Esc to cancel.')
                 $key = Invoke-InteractiveSelection -Items $entries -Prompt 'Select control group to edit' -CurrentValues @() -ContextLines $context
                 if ($null -eq $key) {

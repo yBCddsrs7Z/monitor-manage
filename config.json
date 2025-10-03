@@ -1,4 +1,4 @@
-{
+﻿{
     "controlGroups": {
         "1": {
             "activeDisplays": [],
@@ -93,7 +93,8 @@
             "4": "Left Alt+Left Shift+4",
             "5": "Left Alt+Left Shift+5",
             "6": "Left Alt+Left Shift+6",
-            "7": "Left Alt+Left Shift+7"
+            "7": "Left Alt+Left Shift+7",
+            "_documentation": "Left Alt+Left Shift+_documentation"
         },
         "openConfigurator": "Left Alt+Left Shift+9",
         "toggleOverlay": "Left Alt+Left Shift+0"
