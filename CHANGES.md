@@ -1,6 +1,6 @@
 # Change Log
 
-## 2025-10-03 — Code Quality & Documentation
+## 2025-10-03 — Code Quality, Testing & Documentation
 
 ### Fixes
 - **PowerShell syntax error:** Fixed missing closing brace in `Write-Log` function and extra closing brace in `Get-DisplaysFromSnapshotFile` in `scripts/switch_control_group.ps1`.
@@ -9,6 +9,15 @@
   - `scripts/configure_control_groups.ps1`: `Get-ControlGroupEntries`, `ConvertTo-DisplayReferenceArray`, `ConvertTo-NameArray`, `Get-UniqueDisplayReferences`, `Select-DisplayReferencesMultiple`, `Merge-DisplayReferences`
   - `scripts/switch_control_group.ps1`: `ConvertTo-DisplayReferenceArray`, `Get-DisplaysFromSnapshotFile`, `Get-DisplaySnapshot`
   - `scripts/export_devices.ps1`: `Get-DisplaySnapshot`, `Get-AudioSnapshot`
+
+### Testing
+- **Comprehensive test suite:** Added 29 passing tests across all PowerShell scripts:
+  - `tests/ConfigureControlGroups.Tests.ps1`: 15 tests covering device inventory, display reference merging, array handling, and control group operations
+  - `tests/SwitchControlGroup.Tests.ps1`: 10 tests covering display resolution, normalization, snapshot parsing, and array conversion
+  - `tests/ExportDevices.Tests.ps1`: 4 tests covering property retrieval and JSON structure validation
+- **Test infrastructure:** Created `tests/run-all-tests.ps1` for unified test execution with detailed reporting
+- **Test documentation:** Added `tests/README.md` with usage instructions and coverage details
+- **Test artifacts:** Updated `.gitignore` to exclude temporary test files
 
 ### Documentation
 - **README hotkey updates:** Updated all hotkey references from `Alt+Shift` to `Left Alt+Left Shift` to match current defaults.
