@@ -71,9 +71,9 @@ Each test file sets `$env:MONITOR_MANAGE_SUPPRESS_MAIN='1'` to prevent execution
 - PowerShell 5.1 or PowerShell 7+
 
 ## Test Results
-Last run: All 50 tests passing ✅
-- ConfigureControlGroups: 17/17 passed (unit tests)
-- ConfigureControlGroupsIntegration: 9/9 passed (integration tests) **NEW**
+Last run: All 54 tests passing ✅
+- ConfigureControlGroups: 21/21 passed (unit tests + renumbering)
+- ConfigureControlGroupsIntegration: 9/9 passed (integration tests)
 - SwitchControlGroup: 13/13 passed (with edge cases)
 - ExportDevices: 4/4 passed
 - ValidateConfig: 7/7 passed

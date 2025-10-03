@@ -237,4 +237,62 @@ Describe 'Get-UniqueDisplayReferences' {
     }
 }
 
+Describe 'Optimize-ControlGroupKeys' {
+    It 'renumbers groups with gaps to be sequential' {
+        $config = [System.Collections.Specialized.OrderedDictionary]::new()
+        $config['1'] = [ordered]@{ activeDisplays = @('Display1'); disableDisplays = @(); audio = '' }
+        $config['3'] = [ordered]@{ activeDisplays = @('Display3'); disableDisplays = @(); audio = '' }
+        $config['5'] = [ordered]@{ activeDisplays = @('Display5'); disableDisplays = @(); audio = '' }
+
+        $mapping = Optimize-ControlGroupKeys -Config $config
+
+        if ($config.Keys.Count -ne 3) { throw 'Should still have 3 groups.' }
+        if (-not $config.Contains('1')) { throw 'Should have group 1.' }
+        if (-not $config.Contains('2')) { throw 'Should have group 2.' }
+        if (-not $config.Contains('3')) { throw 'Should have group 3.' }
+        if ($config.Contains('5')) { throw 'Should not have group 5 anymore.' }
+        
+        if ($mapping['3'] -ne '2') { throw 'Group 3 should map to 2.' }
+        if ($mapping['5'] -ne '3') { throw 'Group 5 should map to 3.' }
+    }
+
+    It 'preserves data when renumbering' {
+        $config = [System.Collections.Specialized.OrderedDictionary]::new()
+        $config['2'] = [ordered]@{ activeDisplays = @('DisplayA'); disableDisplays = @('DisplayB'); audio = 'AudioA' }
+        $config['4'] = [ordered]@{ activeDisplays = @('DisplayC'); disableDisplays = @('DisplayD'); audio = 'AudioB' }
+
+        Optimize-ControlGroupKeys -Config $config
+
+        if ($config['1'].activeDisplays[0] -ne 'DisplayA') { throw 'Group 1 should have DisplayA.' }
+        if ($config['1'].audio -ne 'AudioA') { throw 'Group 1 should have AudioA.' }
+        if ($config['2'].activeDisplays[0] -ne 'DisplayC') { throw 'Group 2 should have DisplayC.' }
+        if ($config['2'].audio -ne 'AudioB') { throw 'Group 2 should have AudioB.' }
+    }
+
+    It 'returns empty mapping when already sequential' {
+        $config = [System.Collections.Specialized.OrderedDictionary]::new()
+        $config['1'] = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+        $config['2'] = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+        $config['3'] = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+
+        $mapping = Optimize-ControlGroupKeys -Config $config
+
+        if ($mapping.Count -ne 0) { throw 'Should return empty mapping when already sequential.' }
+    }
+
+    It 'skips _documentation keys during renumbering' {
+        $config = [System.Collections.Specialized.OrderedDictionary]::new()
+        $config['1'] = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+        $config['_documentation'] = [ordered]@{ notes = 'test' }
+        $config['5'] = [ordered]@{ activeDisplays = @(); disableDisplays = @(); audio = '' }
+
+        Optimize-ControlGroupKeys -Config $config
+
+        if (-not $config.Contains('_documentation')) { throw 'Should preserve _documentation key.' }
+        if (-not $config.Contains('1')) { throw 'Should have group 1.' }
+        if (-not $config.Contains('2')) { throw 'Should have group 2.' }
+        if ($config.Contains('5')) { throw 'Should not have group 5.' }
+    }
+}
+
 Remove-Item Env:MONITOR_MANAGE_SUPPRESS_MAIN -ErrorAction SilentlyContinue

@@ -1561,6 +1561,69 @@ function New-ControlGroup {
     return $key
 }
 
+function Optimize-ControlGroupKeys {
+    param(
+        [System.Collections.Specialized.OrderedDictionary]$Config
+    )
+
+    # Get all numeric keys and sort them
+    $numericKeys = @()
+    foreach ($key in $Config.Keys) {
+        if ($key -match '^_') { continue }  # Skip metadata keys
+        $num = 0
+        if ([int]::TryParse($key, [ref]$num)) {
+            $numericKeys += $num
+        }
+    }
+    
+    if ($numericKeys.Count -eq 0) { return @{} }
+    
+    $numericKeys = $numericKeys | Sort-Object
+    
+    # Check if already sequential (1, 2, 3, ...)
+    $isSequential = $true
+    for ($i = 0; $i -lt $numericKeys.Count; $i++) {
+        if ($numericKeys[$i] -ne ($i + 1)) {
+            $isSequential = $false
+            break
+        }
+    }
+    
+    if ($isSequential) { return @{} }  # No renumbering needed
+    
+    # Build mapping of old -> new keys
+    $mapping = @{}
+    for ($i = 0; $i -lt $numericKeys.Count; $i++) {
+        $oldKey = [string]$numericKeys[$i]
+        $newKey = [string]($i + 1)
+        if ($oldKey -ne $newKey) {
+            $mapping[$oldKey] = $newKey
+        }
+    }
+    
+    # Apply renumbering
+    $newConfig = [System.Collections.Specialized.OrderedDictionary]::new()
+    $nextIndex = 1
+    foreach ($key in ($Config.Keys | Sort-Object {[int]::TryParse($_,[ref]$null); [int]$_})) {
+        if ($key -match '^_') {
+            # Preserve metadata keys as-is
+            $newConfig[$key] = $Config[$key]
+        } else {
+            $newKey = [string]$nextIndex
+            $newConfig[$newKey] = $Config[$key]
+            $nextIndex++
+        }
+    }
+    
+    # Replace config contents
+    $Config.Clear()
+    foreach ($key in $newConfig.Keys) {
+        $Config[$key] = $newConfig[$key]
+    }
+    
+    return $mapping
+}
+
 function Remove-ControlGroup {
     param(
         [System.Collections.Specialized.OrderedDictionary]$Config
@@ -1584,6 +1647,16 @@ function Remove-ControlGroup {
     if (Read-YesNoResponse "Are you sure you want to delete this control group?" $false $confirmContext) {
         $Config.Remove($selection) | Out-Null
         Write-Host "Removed control group '$selection'." -ForegroundColor Green
+        
+        # Auto-renumber if there are gaps
+        $mapping = Optimize-ControlGroupKeys -Config $Config
+        if ($mapping.Count -gt 0) {
+            Write-Host "`nAuto-renumbered control groups to be sequential:" -ForegroundColor Cyan
+            foreach ($oldKey in ($mapping.Keys | Sort-Object {[int]$_})) {
+                Write-Host "  Group $oldKey -> Group $($mapping[$oldKey])" -ForegroundColor Gray
+            }
+        }
+        
         return $true
     }
     Write-Host "Did not remove control group '$selection'." -ForegroundColor Yellow
