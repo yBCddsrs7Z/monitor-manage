@@ -5,7 +5,10 @@
 ### Fixes
 - **PowerShell syntax error:** Fixed missing closing brace in `Write-Log` function and extra closing brace in `Get-DisplaysFromSnapshotFile` in `scripts/switch_control_group.ps1`.
 - **Global declaration:** Removed redundant `global` keyword from `overlaySettingsCache` assignment in `ToggleControlGroupOverlay()` (line 426).
-- **Array conversion bug:** Fixed single-item array unwrapping in `scripts/configure_control_groups.ps1` by wrapping all array returns with `@()` in functions: `Get-ControlGroupEntries`, `ConvertTo-DisplayReferenceArray`, `ConvertTo-NameArray`, `Get-UniqueDisplayReferences`, `Select-DisplayReferencesMultiple`, and `Merge-DisplayReferences`.
+- **Array conversion bug:** Fixed single-item array unwrapping across all PowerShell scripts by wrapping array returns with `@()`:
+  - `scripts/configure_control_groups.ps1`: `Get-ControlGroupEntries`, `ConvertTo-DisplayReferenceArray`, `ConvertTo-NameArray`, `Get-UniqueDisplayReferences`, `Select-DisplayReferencesMultiple`, `Merge-DisplayReferences`
+  - `scripts/switch_control_group.ps1`: `ConvertTo-DisplayReferenceArray`, `Get-DisplaysFromSnapshotFile`, `Get-DisplaySnapshot`
+  - `scripts/export_devices.ps1`: `Get-DisplaySnapshot`, `Get-AudioSnapshot`
 
 ### Documentation
 - **README hotkey updates:** Updated all hotkey references from `Alt+Shift` to `Left Alt+Left Shift` to match current defaults.

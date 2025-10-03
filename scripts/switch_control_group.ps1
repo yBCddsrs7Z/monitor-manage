@@ -85,7 +85,7 @@ function Get-DisplaysFromSnapshotFile {
             Active         = $true
         }
     }
-    return $results
+    return @($results)
 }
 
 if ($PSCmdlet.ParameterSetName -eq 'All') {
@@ -205,7 +205,7 @@ function ConvertTo-DisplayReferenceArray {
         $converted = ConvertTo-DisplayReference $value
         if ($converted) { $results += $converted }
     }
-    return $results
+    return @($results)
 }
 
 function Format-DisplayReference {
@@ -332,7 +332,7 @@ function Get-DisplaySnapshot {
             if ($results.Count -eq 0) {
                 Write-Log -Message "Display snapshot attempt $attempt returned no results." -Level 'WARN'
             }
-            return $results
+            return @($results)
         }
 
         Write-Log -Message "Display snapshot attempt $attempt returned no results. Retrying..." -Level 'WARN'

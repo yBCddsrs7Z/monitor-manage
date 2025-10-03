@@ -90,8 +90,8 @@ function Get-DisplaySnapshot {
             DisplayId = if ($null -ne $displayId) { [string]$displayId } else { $null }
         }
     }
-    return $results |
-        Sort-Object -Property @{Expression = { $_.DisplayId }}, @{Expression = { $_.Name }} -Unique
+    return @($results |
+        Sort-Object -Property @{Expression = { $_.DisplayId }}, @{Expression = { $_.Name }} -Unique)
 }
 
 function Get-AudioSnapshot {
@@ -99,7 +99,7 @@ function Get-AudioSnapshot {
 
     $command = Get-Command -Name 'Get-AudioDevice' -ErrorAction Stop
     $devices = & $command -List
-    return $devices | ForEach-Object { Get-PropertyValue $_ @('Name','FriendlyName') }
+    return @($devices | ForEach-Object { Get-PropertyValue $_ @('Name','FriendlyName') })
 }
 
 function Write-Log {
