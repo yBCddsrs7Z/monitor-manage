@@ -541,7 +541,7 @@ function ConvertTo-DisplayReferenceArray {
         $results += $converted
     }
 
-    return $results
+    return @($results)
 }
 
 function ConvertTo-NameArray {
@@ -553,7 +553,7 @@ function ConvertTo-NameArray {
         $name = Get-DisplayReferenceName $reference
         if ($name) { $names += [string]$name }
     }
-    return $names
+    return @($names)
 }
 
 function ConvertTo-ConfigDisplayValue {
@@ -587,7 +587,7 @@ function Get-UniqueDisplayReferences {
         }
     }
 
-    return $unique
+    return @($unique)
 }
 
 function Format-DisplayLabel {
@@ -781,7 +781,7 @@ function Select-DisplayReferencesMultiple {
         }
     }
 
-    return $result
+    return @($result)
 }
 
 function Select-DisplayReferenceSingle {
@@ -936,7 +936,7 @@ function Merge-DisplayReferences {
         $normalized += $result
     }
 
-    return $normalized
+    return @($normalized)
 }
 
 function Resolve-MissingDisplayIds {
