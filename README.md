@@ -60,6 +60,22 @@ Hotkeys are registered dynamically based on the highest numeric key in `config.j
 - **Logs & diagnostics:** Inspect `monitor-toggle.log` for the exact IDs and warnings emitted during a switch. When filing an issue, include the relevant snippet along with your `config.json` entries.
 - **Testing the helpers:** Run `pwsh -File tests/RunTests.ps1` to execute the Pester suite and validate recent code changes.
 
+## Testing
+
+This project has comprehensive test coverage with **41 passing tests** and automated CI/CD.
+
+- **Quick Start**: `pwsh -File tests/run-all-tests.ps1`
+- **Complete Guide**: See [TESTING.md](TESTING.md) for full testing documentation
+- **Test Coverage**: See [tests/README.md](tests/README.md) for detailed test breakdown
+- **CI/CD**: Automated testing via GitHub Actions on every push/PR
+- **Performance**: Profile with `pwsh -File tests/Profile-Performance.ps1`
+
+**Test Results**: 41/41 passing ✅
+- ConfigureControlGroups: 17/17 (device inventory, merging, edge cases)
+- SwitchControlGroup: 13/13 (resolution, normalization, edge cases)
+- ExportDevices: 4/4 (property retrieval, JSON validation)
+- ValidateConfig: 7/7 (schema validation, error detection)
+
 ## Startup (Optional)
 If you want the hotkeys available after login:
 - **Create a shortcut** to `monitor-toggle.ahk`
