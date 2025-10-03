@@ -329,11 +329,17 @@ function Get-DisplaySnapshot {
             }
         }
 
-        # If Get-DisplayConfig returned nothing, try Get-DisplayInfo as fallback
-        if ($results.Count -eq 0 -and $command.Name -eq 'Get-DisplayConfig') {
-            Write-Log -Message "Get-DisplayConfig returned no displays, trying Get-DisplayInfo fallback..." -Level 'WARN'
+        # If Get-DisplayConfig returned nothing or blank names, try Get-DisplayInfo as fallback
+        $hasValidNames = $false
+        foreach ($r in $results) {
+            if ($r.Name) { $hasValidNames = $true; break }
+        }
+        
+        if (($results.Count -eq 0 -or -not $hasValidNames) -and $command.Name -eq 'Get-DisplayConfig') {
+            Write-Log -Message "Get-DisplayConfig returned no usable displays, trying Get-DisplayInfo fallback..." -Level 'WARN'
             $fallbackCommand = Get-Command -Name 'Get-DisplayInfo' -ErrorAction SilentlyContinue
             if ($fallbackCommand) {
+                $results = @()  # Clear invalid results before trying fallback
                 $displays = & $fallbackCommand
                 foreach ($display in $displays) {
                     $state = Get-PropertyValue $display @('IsActive','Enabled','Active','State')
