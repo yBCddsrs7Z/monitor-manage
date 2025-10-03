@@ -110,24 +110,45 @@ Describe 'Get-DisplaysFromSnapshotFile' {
         $result = @(Get-DisplaysFromSnapshotFile -SnapshotPath 'nonexistent.json')
 
         if ($null -eq $result) { throw 'Result should not be null.' }
-        if (($result | Measure-Object).Count -ne 0) { throw 'Expected empty array.' }
+        if (($result | Measure-Object).Count -ne 0) { throw 'Expected empty array for missing file.' }
     }
 }
 
 Describe 'Get-NormalizedDisplayName' {
     It 'normalizes display name by removing spaces and special characters' {
-        $result = Get-NormalizedDisplayName -Name 'HX Armada 27'
-        if ($result -ne 'hxarmada27') { throw 'Normalization failed.' }
+        $result = Get-NormalizedDisplayName 'HX Armada 27'
+
+        if ($result -ne 'hxarmada27') { throw 'Normalization should remove spaces and convert to lowercase.' }
     }
 
     It 'normalizes display name with hyphens' {
-        $result = Get-NormalizedDisplayName -Name 'NE160WUM-NX2'
-        if ($result -ne 'ne160wumnx2') { throw 'Normalization with hyphen failed.' }
+        $result = Get-NormalizedDisplayName 'Display-One'
+
+        if ($result -ne 'displayone') { throw 'Normalization should remove hyphens.' }
     }
 
     It 'returns null for empty string' {
-        $result = Get-NormalizedDisplayName -Name ''
-        if ($null -ne $result) { throw 'Expected null for empty name.' }
+        $result = Get-NormalizedDisplayName ''
+
+        if ($null -ne $result) { throw 'Expected null for empty string.' }
+    }
+
+    It 'handles null input gracefully' {
+        $result = Get-NormalizedDisplayName $null
+
+        if ($null -ne $result) { throw 'Expected null for null input.' }
+    }
+
+    It 'handles whitespace-only input' {
+        $result = Get-NormalizedDisplayName '   '
+
+        if ($null -ne $result) { throw 'Expected null for whitespace-only input.' }
+    }
+
+    It 'handles special characters only' {
+        $result = Get-NormalizedDisplayName '---@@@___'
+
+        if ($null -ne $result) { throw 'Expected null when all characters are stripped.' }
     }
 }
 

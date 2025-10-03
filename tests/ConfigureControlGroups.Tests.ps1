@@ -191,28 +191,49 @@ Describe 'ConvertTo-NameArray' {
         )
         $result = ConvertTo-NameArray $input
 
-        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two valid names.' }
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two names after filtering.' }
     }
 }
 
 Describe 'Get-UniqueDisplayReferences' {
     It 'returns array for single reference' {
-        $input = @([ordered]@{ name = 'Display One'; displayId = '101' })
-        $result = @(Get-UniqueDisplayReferences $input)
+        $references = @(
+            [ordered]@{ name = 'Display One'; displayId = '101' }
+        )
+
+        $result = @(Get-UniqueDisplayReferences $references)
 
         if ($result -isnot [Array]) { throw 'Result should be an array.' }
-        if (($result | Measure-Object).Count -ne 1) { throw 'Expected one unique reference.' }
+        if ($result.Count -ne 1) { throw 'Expected one unique reference.' }
     }
 
     It 'removes duplicate references' {
-        $input = @(
-            [ordered]@{ name = 'Display One'; displayId = '101' },
-            [ordered]@{ name = 'Display One'; displayId = '101' },
-            [ordered]@{ name = 'Display Two'; displayId = '202' }
+        $references = @(
+            [ordered]@{ name = 'Display One'; displayId = '101' }
+            [ordered]@{ name = 'Display One'; displayId = '101' }
+            [ordered]@{ name = 'Display Two'; displayId = '102' }
         )
-        $result = Get-UniqueDisplayReferences $input
 
-        if (($result | Measure-Object).Count -ne 2) { throw 'Expected two unique references.' }
+        $result = @(Get-UniqueDisplayReferences $references)
+
+        if ($result.Count -ne 2) { throw 'Expected two unique references after deduplication.' }
+    }
+
+    It 'handles empty array input' {
+        $references = @()
+
+        $result = @(Get-UniqueDisplayReferences $references)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if ($result.Count -ne 0) { throw 'Expected empty array for empty input.' }
+    }
+
+    It 'handles null input gracefully' {
+        $result = @(Get-UniqueDisplayReferences $null)
+
+        if ($result -isnot [Array]) { throw 'Result should be an array.' }
+        if ($result.Count -ne 0) { throw 'Expected empty array for null input.' }
     }
 }
 

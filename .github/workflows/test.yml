@@ -1,0 +1,72 @@
+name: Test Suite
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run PowerShell Tests
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PowerShell
+        shell: pwsh
+        run: |
+          Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)"
+          Write-Host "OS: $($PSVersionTable.OS)"
+      
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable -Name Pester)) {
+            Write-Host "Installing Pester..."
+            Install-Module -Name Pester -Force -Scope CurrentUser -SkipPublisherCheck
+          }
+          Import-Module Pester
+          Write-Host "Pester version: $((Get-Module Pester).Version)"
+      
+      - name: Run all tests
+        shell: pwsh
+        run: |
+          $env:MONITOR_MANAGE_SUPPRESS_MAIN = '1'
+          $env:MONITOR_MANAGE_SUPPRESS_SWITCH = '1'
+          
+          Write-Host "Running test suite..."
+          pwsh -File tests/run-all-tests.ps1
+        
+      - name: Validate configuration schema
+        shell: pwsh
+        run: |
+          Write-Host "Validating config.json schema..."
+          pwsh -File scripts/Validate-Config.ps1 -ConfigPath config.json
+      
+      - name: Check for PowerShell syntax errors
+        shell: pwsh
+        run: |
+          Write-Host "Checking PowerShell scripts for syntax errors..."
+          $scripts = Get-ChildItem -Path scripts -Filter *.ps1 -Recurse
+          $hasErrors = $false
+          
+          foreach ($script in $scripts) {
+            try {
+              $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $script.FullName -Raw), [ref]$null)
+              Write-Host "✓ $($script.Name) - OK"
+            } catch {
+              Write-Host "✗ $($script.Name) - SYNTAX ERROR: $_" -ForegroundColor Red
+              $hasErrors = $true
+            }
+          }
+          
+          if ($hasErrors) {
+            throw "Syntax errors detected in PowerShell scripts"
+          }

@@ -1,5 +1,23 @@
 # Change Log
 
+## 2025-10-03 — Code Quality, Testing, CI/CD & Performance
+
+### CI/CD
+- **GitHub Actions workflow:** Added automated testing pipeline (`.github/workflows/test.yml`)
+  - Runs all 41 tests on every push and pull request
+  - Validates config.json schema
+  - Checks PowerShell scripts for syntax errors
+  - Runs on Windows environment with PowerShell
+
+### Performance
+- **Performance profiling:** Added `tests/Profile-Performance.ps1` for benchmarking
+  - Profiles config validation, module loading, and display name normalization
+  - Measures JSON parsing performance
+  - Reports test suite execution time and average per test
+  - Configurable iteration count for accuracy
+
+---
+
 ## 2025-10-03 — Code Quality, Testing & Documentation
 
 ### Fixes
@@ -11,11 +29,14 @@
   - `scripts/export_devices.ps1`: `Get-DisplaySnapshot`, `Get-AudioSnapshot`
 
 ### Testing
-- **Comprehensive test suite:** Added 36 passing tests across all PowerShell scripts:
-  - `tests/ConfigureControlGroups.Tests.ps1`: 15 tests covering device inventory, display reference merging, array handling, and control group operations
-  - `tests/SwitchControlGroup.Tests.ps1`: 10 tests covering display resolution, normalization, snapshot parsing, and array conversion
+- **Comprehensive test suite:** Added 41 passing tests across all PowerShell scripts:
+  - `tests/ConfigureControlGroups.Tests.ps1`: 17 tests covering device inventory, display reference merging, array handling, control group operations, and edge cases (null/empty inputs)
+  - `tests/SwitchControlGroup.Tests.ps1`: 13 tests covering display resolution, normalization, snapshot parsing, array conversion, and edge cases (null, whitespace, special characters)
   - `tests/ExportDevices.Tests.ps1`: 4 tests covering property retrieval and JSON structure validation
   - `tests/ValidateConfig.Tests.ps1`: 7 tests covering config.json schema validation
+- **Edge case coverage:** Added 5 new tests for robustness:
+  - Null and empty array handling in `Get-UniqueDisplayReferences`
+  - Null, whitespace-only, and special-character-only inputs in `Get-NormalizedDisplayName`
 - **Test infrastructure:** Created `tests/run-all-tests.ps1` for unified test execution with detailed reporting
 - **Test documentation:** Added `tests/README.md` with usage instructions and coverage details
 - **Test artifacts:** Updated `.gitignore` to exclude temporary test files

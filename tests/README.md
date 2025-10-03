@@ -28,19 +28,19 @@ pwsh -File tests/RunTests.ps1
 
 ## Test Coverage
 
-### ConfigureControlGroups.Tests.ps1 (15 tests)
+### ConfigureControlGroups.Tests.ps1 (17 tests)
 - **Get-DeviceInventory**: Device enumeration and array handling
 - **Merge-DisplayReferences**: Display reference merging with available displays
 - **ConvertTo-DisplayReferenceArray**: Array conversion with single/multiple items
 - **Get-ControlGroupEntries**: Control group enumeration
 - **ConvertTo-NameArray**: Name extraction and filtering
-- **Get-UniqueDisplayReferences**: Deduplication logic
+- **Get-UniqueDisplayReferences**: Deduplication logic with edge cases (null, empty arrays)
 
-### SwitchControlGroup.Tests.ps1 (10 tests)
+### SwitchControlGroup.Tests.ps1 (13 tests)
 - **Resolve-DisplayIdentifiers**: Display resolution by name, normalized name, and ID
 - **ConvertTo-DisplayReferenceArray**: Array conversion for display references
 - **Get-DisplaysFromSnapshotFile**: Snapshot file parsing and array handling
-- **Get-NormalizedDisplayName**: Display name normalization
+- **Get-NormalizedDisplayName**: Display name normalization with edge cases (null, whitespace, special chars)
 
 ### ExportDevices.Tests.ps1 (4 tests)
 - **Get-PropertyValue**: Property retrieval from objects
@@ -64,8 +64,14 @@ Each test file sets `$env:MONITOR_MANAGE_SUPPRESS_MAIN='1'` to prevent execution
 - PowerShell 5.1 or PowerShell 7+
 
 ## Test Results
-Last run: All 36 tests passing ✅
-- ConfigureControlGroups: 15/15 passed
-- SwitchControlGroup: 10/10 passed  
+Last run: All 41 tests passing ✅
+- ConfigureControlGroups: 17/17 passed (+2 edge cases)
+- SwitchControlGroup: 13/13 passed (+3 edge cases)
 - ExportDevices: 4/4 passed
 - ValidateConfig: 7/7 passed
+
+### Performance Testing
+Use `tests/Profile-Performance.ps1` to profile script execution times:
+```powershell
+pwsh -File tests/Profile-Performance.ps1 -Iterations 20
+```
