@@ -36,6 +36,7 @@ function Write-Log {
     } catch {
         Write-Verbose "Unable to write to log file '$logPath': $_"
     }
+}
 
 function Update-DeviceSnapshotIfPossible {
     param([string]$SnapshotPath)
@@ -85,7 +86,6 @@ function Get-DisplaysFromSnapshotFile {
         }
     }
     return $results
-}
 }
 
 if ($PSCmdlet.ParameterSetName -eq 'All') {

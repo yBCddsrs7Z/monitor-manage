@@ -1,5 +1,8 @@
 # monitor-manage
-# original code by Matt Drayton (https://github.com/matt-drayton), modified with GPT-5-Codex to achieve desired result
+
+AutoHotkey automation that presents hotkeys for switching between display/audio layouts, with an optional overlay showing layouts and hotkeys.
+
+**Original code** by [Matt Drayton](https://github.com/matt-drayton)
 
 ## Overview
 `monitor-manage` lets you toggle between customizable monitor and audio "control groups" with AutoHotkey hotkeys. The AutoHotkey entry point (`monitor-toggle.ahk`) invokes the PowerShell helpers in `scripts/` to capture the current device inventory, resolve the displays you named in `config.json`, and call the `DisplayConfig` / `AudioDeviceCmdlets` modules to apply the requested state. Each switch now refreshes `devices_snapshot.json` automatically so the configuration survives changing display identifiers and lid-close scenarios.
@@ -33,25 +36,25 @@ Keep all of these files in the same directory (for example `C:\Progs\monitor-man
 ## Hotkeys
 | Shortcut | Action |
 | -------- | ------ |
-| `Alt+Shift+1` … `Alt+Shift+N` | Activate control group `N` (depending on how many groups exist) |
-| `Alt+Shift+8` | Enable every detected display (panic button) |
-| `Alt+Shift+9` | Show an on-screen overlay listing all configured control groups and hotkeys |
-| `Alt+Shift+0` | Refresh the device snapshot and launch the configuration helper |
+| `Left Alt+Left Shift+1` … `Left Alt+Left Shift+7` | Activate control group 1 through 7 |
+| `Left Alt+Left Shift+8` | Enable every detected display (panic button) |
+| `Left Alt+Left Shift+9` | Open the PowerShell configuration helper |
+| `Left Alt+Left Shift+0` | Toggle the on-screen overlay showing all control groups |
 
 Hotkeys are registered dynamically based on the highest numeric key in `config.json`.
 
 ## Configuring Control Groups
-- **Interactive workflow:** Press `Alt+Shift+0` (or run `scripts/configure_control_groups.ps1`) to edit groups interactively. The script loads the current configuration, lists detected displays from `devices_snapshot.json`, and lets you add/edit/remove groups without touching JSON by hand.
-- **Quick reference:** Press `Alt+Shift+9` to toggle an on-screen overlay (upper-left, blue text) that lists every control group, the displays each enables/disables, and the audio output that will be selected.
+- **Interactive workflow:** Press `Left Alt+Left Shift+9` (or run `scripts/configure_control_groups.ps1`) to edit groups interactively. The script loads the current configuration, lists detected displays from `devices_snapshot.json`, and lets you add/edit/remove groups without touching JSON by hand.
+- **Quick reference:** Press `Left Alt+Left Shift+0` to toggle an on-screen overlay (upper-left, blue text) that lists every control group, the displays each enables/disables, and the audio output that will be selected.
 - **Storage:** Saved control groups live in `config.json`. Each entry contains `activeDisplays`, `disableDisplays`, and an optional `audio` friendly name.
 
 ## Switching Behaviour
 - **Name-first resolution:** Control groups are matched via the display names captured in the snapshot. Stored `displayId` values are kept in `config.json` for reference but the switching script no longer reuses stale IDs—it always relies on the latest export or snapshot data.
 - **Automatic snapshot regeneration:** `switch_control_group.ps1` calls `export_devices.ps1` before every operation, so changes such as docking/undocking or lid actions are accounted for automatically.
-- **Logging:** Every switch attempt appends entries to `monitor-toggle.log` (created beside the scripts). Warnings are emitted when a requested display or audio device is not detected. The summary window (`Alt+Shift+9`) is generated on demand from the current `config.json`.
+- **Logging:** Every switch attempt appends entries to `monitor-toggle.log` (created beside the scripts). Warnings are emitted when a requested display or audio device is not detected. The summary window (`Left Alt+Left Shift+0`) is generated on demand from the current `config.json`.
 
 ## Troubleshooting
-- **Display missing from a group:** Ensure Windows sees the display (open Display Settings), then press `Alt+Shift+0` to rebuild the snapshot. The switch script already refreshes snapshots automatically, but re-exporting ensures the fallback file is accurate.
+- **Display missing from a group:** Ensure Windows sees the display (open Display Settings), then press `Left Alt+Left Shift+9` to open the configurator which will rebuild the snapshot. The switch script already refreshes snapshots automatically, but re-exporting ensures the fallback file is accurate.
 - **Modules fail to load:** From an elevated PowerShell prompt run `Import-Module DisplayConfig` and `Import-Module AudioDeviceCmdlets` to confirm the modules are available. Re-run the helper to trigger installation prompts if needed.
 - **Logs & diagnostics:** Inspect `monitor-toggle.log` for the exact IDs and warnings emitted during a switch. When filing an issue, include the relevant snippet along with your `config.json` entries.
 - **Testing the helpers:** Run `pwsh -File tests/RunTests.ps1` to execute the Pester suite and validate recent code changes.

@@ -1,4 +1,23 @@
-# Change Log — 2025-09-28
+# Change Log
+
+## 2025-10-03 — Code Quality & Documentation
+
+### Fixes
+- **PowerShell syntax error:** Fixed missing closing brace in `Write-Log` function and extra closing brace in `Get-DisplaysFromSnapshotFile` in `scripts/switch_control_group.ps1`.
+- **Global declaration:** Removed redundant `global` keyword from `overlaySettingsCache` assignment in `ToggleControlGroupOverlay()` (line 426).
+
+### Documentation
+- **README hotkey updates:** Updated all hotkey references from `Alt+Shift` to `Left Alt+Left Shift` to match current defaults.
+- **README clarity:** Clarified hotkey actions (`Left Alt+Left Shift+9` opens configurator, `Left Alt+Left Shift+0` toggles overlay).
+- **Original attribution:** Added proper attribution to Matt Drayton's original work.
+
+### Enhancements
+- **Hotkey normalization:** Enhanced descriptor parsing to handle `Left/Right` modifier prefixes with space normalization.
+- **Error handling:** Improved PowerShell module installation flow with better error messages.
+
+---
+
+## 2025-09-28 — Initial Enhanced Fork
 
 ## Documentation
 - **README overhaul:** Rewrote the top-level README to document automatic snapshot refresh, name-based display resolution, current hotkeys, setup workflow, troubleshooting tips, and startup guidance.

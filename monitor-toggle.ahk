@@ -423,7 +423,7 @@ ToggleControlGroupOverlay(descriptor := "") {
     controlGroups := GetControlGroups(config)
     maxIndex := GetHighestConfigIndex(controlGroups)
     overlaySettings := GetOverlaySettings(config)
-    global overlaySettingsCache := overlaySettings
+    overlaySettingsCache := overlaySettings
     hotkeySettings := GetHotkeySettings(config)
 
     if (maxIndex <= 0) {
