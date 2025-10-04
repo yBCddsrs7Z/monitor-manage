@@ -77,7 +77,56 @@ function Get-DisplaySnapshot {
 
     $command = Get-Command -Name 'Get-DisplayInfo' -ErrorAction Stop
     $displays = & $command
+    
+    # Get monitor info from WMI (stable identifiers)
+    $wmiMonitors = @()
+    try {
+        $monitors = Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorID -ErrorAction SilentlyContinue
+        foreach ($monitor in $monitors) {
+            $monitorInfo = @{
+                InstanceName = $monitor.InstanceName
+                Name = $null
+                SerialNumber = $null
+                ManufacturerName = $null
+                ProductCode = $null
+            }
+            
+            if ($monitor.UserFriendlyName) {
+                $bytes = $monitor.UserFriendlyName | Where-Object { $_ -ne 0 }
+                if ($bytes) {
+                    $monitorInfo.Name = [System.Text.Encoding]::ASCII.GetString($bytes).Trim()
+                }
+            }
+            
+            if ($monitor.SerialNumberID) {
+                $bytes = $monitor.SerialNumberID | Where-Object { $_ -ne 0 }
+                if ($bytes) {
+                    $monitorInfo.SerialNumber = [System.Text.Encoding]::ASCII.GetString($bytes).Trim()
+                }
+            }
+            
+            if ($monitor.ManufacturerName) {
+                $bytes = $monitor.ManufacturerName | Where-Object { $_ -ne 0 }
+                if ($bytes) {
+                    $monitorInfo.ManufacturerName = [System.Text.Encoding]::ASCII.GetString($bytes).Trim()
+                }
+            }
+            
+            if ($monitor.ProductCodeID) {
+                $bytes = $monitor.ProductCodeID | Where-Object { $_ -ne 0 }
+                if ($bytes) {
+                    $monitorInfo.ProductCode = [System.Text.Encoding]::ASCII.GetString($bytes).Trim()
+                }
+            }
+            
+            $wmiMonitors += [pscustomobject]$monitorInfo
+        }
+    } catch {
+        # WMI not available, continue without it
+    }
+    
     $results = @()
+    $monitorIndex = 0
     foreach ($display in $displays) {
         if (-not ($display.Active -or $display.DisplayActive)) {
             continue
@@ -89,14 +138,28 @@ function Get-DisplaySnapshot {
         }
 
         $displayId = Get-PropertyValue $display @('DisplayId','Id','TargetId','PathId')
+        
+        # Get stable identifier from WMI if available
+        $instanceName = $null
+        $serialNumber = $null
+        if ($monitorIndex -lt $wmiMonitors.Count) {
+            $wmiMonitor = $wmiMonitors[$monitorIndex]
+            if (-not $friendlyName -and $wmiMonitor.Name) {
+                $friendlyName = $wmiMonitor.Name
+            }
+            $instanceName = $wmiMonitor.InstanceName
+            $serialNumber = $wmiMonitor.SerialNumber
+        }
 
         $results += [pscustomobject]@{
-            Name      = $friendlyName
-            DisplayId = if ($null -ne $displayId) { [string]$displayId } else { $null }
+            Name         = $friendlyName
+            DisplayId    = if ($null -ne $displayId) { [string]$displayId } else { $null }
+            InstanceName = $instanceName
+            SerialNumber = $serialNumber
         }
+        $monitorIndex++
     }
-    return @($results |
-        Sort-Object -Property @{Expression = { $_.DisplayId }}, @{Expression = { $_.Name }} -Unique)
+    return @($results | Sort-Object -Property @{Expression = { $_.DisplayId }} -Unique)
 }
 
 function Get-AudioSnapshot {

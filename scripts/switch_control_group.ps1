@@ -230,6 +230,8 @@ function Resolve-DisplayIdentifiers {
 
     $lookupByName = @{}
     $lookupByNormalizedName = @{}
+    $lookupByInstanceName = @{}
+    $lookupBySerial = @{}
     $knownCount = 0
     foreach ($display in $KnownDisplays) {
         if ($display.Name -and -not $lookupByName.ContainsKey($display.Name)) {
@@ -245,6 +247,15 @@ function Resolve-DisplayIdentifiers {
         if ($normalizedName -and -not $lookupByNormalizedName.ContainsKey($normalizedName)) {
             $lookupByNormalizedName[$normalizedName] = $display
         }
+        
+        # Build lookups for stable identifiers
+        if ($display.PSObject.Properties['InstanceName'] -and $display.InstanceName) {
+            $lookupByInstanceName[$display.InstanceName] = $display
+        }
+        if ($display.PSObject.Properties['SerialNumber'] -and $display.SerialNumber) {
+            $lookupBySerial[$display.SerialNumber] = $display
+        }
+        
         $knownCount++
     }
 
@@ -258,6 +269,7 @@ function Resolve-DisplayIdentifiers {
         $name = $reference.Name
         $normalizedName = Get-NormalizedDisplayName -Name $name
 
+        # Try exact name match
         if ($name -and $lookupByName.ContainsKey($name)) {
             $candidateByExact = $lookupByName[$name]
             if ($candidateByExact.DisplayId) {
@@ -268,6 +280,7 @@ function Resolve-DisplayIdentifiers {
             }
         }
 
+        # Try normalized name match
         if (-not $resolved -and $normalizedName -and $lookupByNormalizedName.ContainsKey($normalizedName)) {
             $candidateByNormalized = $lookupByNormalizedName[$normalizedName]
             if ($candidateByNormalized.DisplayId) {
@@ -275,6 +288,23 @@ function Resolve-DisplayIdentifiers {
                     $ids.Add([uint32]$candidateByNormalized.DisplayId)
                     $resolved = $true
                 } catch { }
+            }
+        }
+
+        # Try direct DisplayId match (when name is numeric like "1", "2", "3")
+        if (-not $resolved -and $name) {
+            $idNum = 0
+            if ([int]::TryParse($name, [ref]$idNum)) {
+                # Name is a number - try to use it as DisplayId directly
+                foreach ($display in $KnownDisplays) {
+                    if ($display.DisplayId -eq $idNum) {
+                        try {
+                            $ids.Add([uint32]$display.DisplayId)
+                            $resolved = $true
+                            break
+                        } catch { }
+                    }
+                }
             }
         }
 
