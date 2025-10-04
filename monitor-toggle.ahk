@@ -173,6 +173,11 @@ ExportDevices(hk := "", showNotification := true) {
     }
 }
 
+CreateSetConfigHandler(groupKey, descriptor) {
+    ; Create a closure that captures groupKey by VALUE not reference
+    return (params*) => SetConfig(groupKey, descriptor)
+}
+
 RegisterConfiguredHotkeys(hotkeys, maxIndex) {
     if !IsObject(hotkeys) {
         hotkeys := GetDefaultConfig()["hotkeys"]
@@ -186,8 +191,8 @@ RegisterConfiguredHotkeys(hotkeys, maxIndex) {
             LogMessage("No valid hotkey configured for control group " keyStr "; skipping hotkey registration.")
             continue
         }
-        bound := SetConfig.Bind(keyStr, descriptor)
-        handler := (params*) => bound()
+        ; Capture keyStr value immediately to avoid closure bug
+        handler := CreateSetConfigHandler(keyStr, descriptor)
         RegisterHotkey("control-group " keyStr, hotkeyStr, handler)
     }
 
