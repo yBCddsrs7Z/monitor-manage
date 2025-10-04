@@ -560,7 +560,7 @@ if (-not $ControlGroup -and -not $ActivateAll) {
 if ($PSCmdlet.ParameterSetName -eq 'All') {
     Write-Log -Message "Switch requested to activate all displays."
 } else {
-    Write-Log -Message "Switch requested for control group '$ControlGroup'."
+    Write-Log -Message "Switch requested for profile '$ControlGroup'."
 }
 
 # Show "Activating" notification
@@ -576,7 +576,7 @@ try {
     if ($PSCmdlet.ParameterSetName -eq 'All') {
         $notification.BalloonTipText = "Activating all displays, please wait..."
     } else {
-        $notification.BalloonTipText = "Activating Control Group $ControlGroup, please wait..."
+        $notification.BalloonTipText = "Activating profile $ControlGroup, please wait..."
     }
     
     $notification.Visible = $true
@@ -671,13 +671,12 @@ if ($controlGroups -is [System.Collections.IDictionary]) {
     if ($prop) { $groupConfig = $prop.Value }
 }
 if (-not $groupConfig) {
-    $message = "Control group '$ControlGroup' not present in config.json."
+    $message = "Profile $ControlGroup not found in the configuration."
     Write-Error $message
     Write-Log -Message $message -Level 'ERROR'
     exit 1
 }
 
-Write-Log -Message "Loaded control group '$ControlGroup' configuration."
 
 $activeDisplays = @($groupConfig.activeDisplays)
 $displaysToDisable = @($groupConfig.disableDisplays)
@@ -687,7 +686,7 @@ if (-not $enableList) { $enableList = '(none)' }
 $disableList = ($displaysToDisable | Where-Object { $_ }) -join ', '
 if (-not $disableList) { $disableList = '(none)' }
 $audioTarget = if ($groupConfig.audio) { $groupConfig.audio } else { '(none)' }
-Write-Log -Message "Control group '$ControlGroup': enable -> $enableList; disable -> $disableList; audio -> $audioTarget."
+Write-Log -Message "Profile '$ControlGroup': enable -> $enableList; disable -> $disableList; audio -> $audioTarget."
 
 # Resolve the current display inventory. If the helper fails (e.g. unsupported OS)
 # bubble the error back so the AHK layer can alert the user.
@@ -723,7 +722,7 @@ foreach ($display in $requestedDisplays) {
 }
 
 try {
-    Write-Log -Message "Applying display state changes for control group '$ControlGroup'."
+    Write-Log -Message "Applying display state changes for profile '$ControlGroup'."
     Set-DisplayState -Enable $activeDisplays -Disable $displaysToDisable -KnownDisplays $knownDisplays
     foreach ($display in $activeDisplays) {
         if ($display) { Write-Log -Message "Requested display '$display' to be active." }
@@ -751,10 +750,10 @@ if ($audioDeviceName) {
         Write-Log -Message $warning -Level 'WARN'
     }
 } else {
-    Write-Log -Message "No audio device defined for control group '$ControlGroup'." -Level 'WARN'
+    Write-Log -Message "No audio device defined for profile '$ControlGroup'." -Level 'WARN'
 }
 
-Write-Log -Message "Completed switch for control group '$ControlGroup'."
+Write-Log -Message "Completed switch for profile '$ControlGroup'."
 
 # Clear any previous error state on success
 $errorFile = Join-Path $repoRoot 'last_error.txt'
