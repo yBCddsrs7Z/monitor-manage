@@ -18,26 +18,21 @@ Vibed with Claude Sonnet 4.5 Thinking
 - **`monitor-toggle.ahk`** – AutoHotkey runner that binds hotkeys, writes `monitor-toggle.log`, and invokes the PowerShell helpers
 - **`scripts/`** – PowerShell helpers (`switch_control_group.ps1`, `configure_control_groups.ps1`, `export_devices.ps1`, etc.)
 - **`config.json`** – Control group definitions (enabled / disabled display names plus audio device)
-- **`devices_snapshot.json`** – Latest exported device inventory used by the configuration helper and as a fallback during switching
 - **`monitor-toggle.log`** – Rolling log with switch attempts, warnings, and installer prompts
 - **`tests/`** – Pester test harnesses (`RunTests.ps1`, `InspectMerge.ps1`, …) for development verification
 
 Keep all of these files in the same directory (for example `C:\Progs\monitor-manage`). All paths resolve relative to the AutoHotkey script.
 
-## Installation & Setup
-1. **Clone or copy** this repository to your preferred location.
-2. **Install AutoHotkey v2** if it is not already present.
-3. **Optional:** run the automated tests to confirm the helpers load:
-   ```powershell
-   pwsh -File tests/RunTests.ps1
-   ```
-4. **Launch `monitor-toggle.ahk`.** The script registers the hotkeys and remains resident in the tray.
-5. On first use you will be prompted (via PowerShell) to install `DisplayConfig` and `AudioDeviceCmdlets`. Approve the prompts to continue.
+## Installation and Setup
 
-## Hotkeys
-| Shortcut | Action |
-| -------- | ------ |
-| `Left Alt+Left Shift+1` … `Left Alt+Left Shift+7` | Activate control group 1 through 7 |
+1. **Clone the repository** or download the files to a directory of your choice.
+2. **Check requirements** (optional - modules install automatically):
+   ```powershell
+   pwsh -File scripts/check_requirements.ps1
+   ```
+   This verifies that required PowerShell modules (`DisplayConfig` and `AudioDeviceCmdlets`) are installed and offers to install them if missing.
+   
+   **Note:** Modules are also installed automatically when you first run any script that needs them.
 | `Left Alt+Left Shift+8` | Enable every detected display (panic button) |
 | `Left Alt+Left Shift+9` | Open the PowerShell configuration helper |
 | `Left Alt+Left Shift+0` | Toggle the on-screen overlay showing all control groups |
