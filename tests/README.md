@@ -65,18 +65,21 @@ $result = @(SomeFunction $input)
 
 ### Test Isolation
 Each test file sets `$env:MONITOR_MANAGE_SUPPRESS_MAIN='1'` to prevent execution of main script logic during testing.
-
 ## Requirements
 - **Pester** testing framework (v3.4.0 or later)
 - PowerShell 5.1 or PowerShell 7+
 
 ## Test Results
-Last run: All 54 tests passing ✅
+Last run: All tests passing 
+**PowerShell Tests**: 54/54
 - ConfigureControlGroups: 21/21 passed (unit tests + renumbering)
 - ConfigureControlGroupsIntegration: 9/9 passed (integration tests)
 - SwitchControlGroup: 13/13 passed (with edge cases)
 - ExportDevices: 4/4 passed
 - ValidateConfig: 7/7 passed
+
+**AutoHotkey Tests**: NEW 
+- monitor-toggle.Tests.ahk: Tests config loading, hotkey registration, and closure bug fix
 
 ### Performance Testing
 Use `tests/Profile-Performance.ps1` to profile script execution times:
