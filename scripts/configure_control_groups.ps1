@@ -283,16 +283,38 @@ function Get-ConfigData {
 
     $result = [System.Collections.Specialized.OrderedDictionary]::new()
 
+    if ($env:MONITOR_MANAGE_DEBUG) {
+        Write-Host "[DEBUG] controlGroupSource has $($controlGroupSource.Keys.Count) keys: $($controlGroupSource.Keys -join ', ')" -ForegroundColor Gray
+    }
+
     foreach ($key in $controlGroupSource.Keys) {
         # Skip documentation and metadata keys (starting with _)
         if ($key -match '^_') { continue }
         
         $groupValue = $controlGroupSource[$key]
+        
+        if ($env:MONITOR_MANAGE_DEBUG) {
+            Write-Host "[DEBUG] Processing group $key" -ForegroundColor Gray
+            Write-Host "[DEBUG]   activeDisplays raw: $($groupValue.activeDisplays)" -ForegroundColor Gray
+        }
+        
+        $activeConverted = ConvertTo-DisplayReferenceArray @($groupValue.activeDisplays)
+        $disableConverted = ConvertTo-DisplayReferenceArray @($groupValue.disableDisplays)
+        
+        if ($env:MONITOR_MANAGE_DEBUG) {
+            Write-Host "[DEBUG]   activeDisplays converted count: $($activeConverted.Count)" -ForegroundColor Gray
+            Write-Host "[DEBUG]   disableDisplays converted count: $($disableConverted.Count)" -ForegroundColor Gray
+        }
+        
         $result[$key] = [ordered]@{
-            activeDisplays  = ConvertTo-DisplayReferenceArray @($groupValue.activeDisplays)
-            disableDisplays = ConvertTo-DisplayReferenceArray @($groupValue.disableDisplays)
+            activeDisplays  = $activeConverted
+            disableDisplays = $disableConverted
             audio           = $groupValue.audio
         }
+    }
+
+    if ($env:MONITOR_MANAGE_DEBUG) {
+        Write-Host "[DEBUG] Get-ConfigData returning $($result.Keys.Count) groups" -ForegroundColor Gray
     }
 
     return $result
