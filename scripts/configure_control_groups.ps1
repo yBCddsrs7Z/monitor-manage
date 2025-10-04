@@ -29,16 +29,18 @@ function Get-DefaultHotkeys {
 
 function Get-DefaultOverlay {
     return [ordered]@{
-        fontName         = 'Segoe UI'
-        fontSize         = 16
-        fontBold         = $true
-        textColor        = 'Blue'
-        backgroundColor  = 'Black'
-        opacity          = 220
-        position         = 'top-left'
-        marginX          = 10
-        marginY          = 10
-        durationMs       = 10000
+        fontName              = 'Segoe UI'
+        fontSize              = 16
+        fontBold              = $true
+        textColor             = 'Blue'
+        backgroundColor       = 'Black'
+        opacity               = 220
+        position              = 'top-left'
+        marginX               = 10
+        marginY               = 10
+        durationMs            = 10000
+        notificationPosition  = 'top-center'
+        notificationDuration  = 5000
     }
 }
 

@@ -126,6 +126,9 @@ ActivateAllDisplays(descriptor := "") {
         LogMessage("Enable-all sequence requested")
     }
 
+    ; Show confirmation notification
+    ShowNotification("Activating all displays...")
+
     psScript := scriptsDir "\switch_control_group.ps1"
     if !FileExist(psScript) {
         ShowFatalError("PowerShell script not found at '" psScript "'.")
@@ -362,6 +365,9 @@ OpenConfigurator(hk) {
 
     LogMessage(Format('Launching configuration helper via {}', hk ? hk : "manual invocation"))
 
+    ; Show confirmation notification
+    ShowNotification("Opening configurator...")
+
     ExportDevices("", false)
 
     command := Format('powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -NoExit -File "{1}"', configScript)
@@ -530,7 +536,9 @@ GetDefaultConfig() {
         "position", "top-left",
         "marginX", 10,
         "marginY", 10,
-        "durationMs", 10000
+        "durationMs", 10000,
+        "notificationPosition", "top-center",
+        "notificationDuration", 5000
     )
 
     controlGroups := Map()
@@ -835,13 +843,23 @@ CalculateOverlayPosition(settings, width, height) {
         case "top-right":
             x := screenW - width - marginX
             y := marginY
+        case "top-center":
+            x := (screenW - width) // 2
+            y := marginY
         case "bottom-left":
             x := marginX
+            y := screenH - height - marginY
+        case "bottom-center":
+            x := (screenW - width) // 2
             y := screenH - height - marginY
         case "bottom-right":
             x := screenW - width - marginX
             y := screenH - height - marginY
+        case "center":
+            x := (screenW - width) // 2
+            y := (screenH - height) // 2
         default:
+            ; top-left
             x := marginX
             y := marginY
     }
@@ -1163,4 +1181,40 @@ ShowTransientOverlay(message, overlaySettings := "") {
         overlaySettingsCache := ""
     }
     ShowControlGroupOverlay(message)
+}
+
+ShowNotification(message) {
+    ; Show a temporary notification overlay using notification settings
+    global overlaySettingsCache
+    
+    ; Load overlay settings from config
+    config := LoadConfig()
+    overlaySettings := GetMapValue(config, "overlay", Map())
+    
+    ; Get notification-specific settings
+    notificationPos := GetMapValue(overlaySettings, "notificationPosition", "top-center")
+    notificationDuration := Integer(GetMapValue(overlaySettings, "notificationDuration", 5000))
+    
+    ; Create temporary settings for notification
+    tempSettings := Map()
+    tempSettings["fontName"] := GetMapValue(overlaySettings, "fontName", "Segoe UI")
+    tempSettings["fontSize"] := Integer(GetMapValue(overlaySettings, "fontSize", 16))
+    tempSettings["fontBold"] := GetMapValue(overlaySettings, "fontBold", true)
+    tempSettings["textColor"] := GetMapValue(overlaySettings, "textColor", "Blue")
+    tempSettings["backgroundColor"] := GetMapValue(overlaySettings, "backgroundColor", "Black")
+    tempSettings["opacity"] := Integer(GetMapValue(overlaySettings, "opacity", 220))
+    tempSettings["position"] := notificationPos
+    tempSettings["marginX"] := Integer(GetMapValue(overlaySettings, "marginX", 10))
+    tempSettings["marginY"] := Integer(GetMapValue(overlaySettings, "marginY", 10))
+    tempSettings["durationMs"] := notificationDuration
+    
+    ; Save original cache and apply temp settings
+    originalCache := overlaySettingsCache
+    overlaySettingsCache := tempSettings
+    
+    ; Show the notification
+    ShowControlGroupOverlay(message, notificationDuration)
+    
+    ; Restore original cache
+    overlaySettingsCache := originalCache
 }
