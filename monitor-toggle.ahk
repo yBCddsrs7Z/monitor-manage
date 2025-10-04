@@ -401,9 +401,7 @@ SetConfig(controlGroup, descriptor := "") {
         
         ; Check if PowerShell script failed
         if (exitCode != 0) {
-            errorMsg := "Control group " controlGroup " could not be applied.`n`nCheck monitor-toggle.log for details."
-            LogMessage("Switch helper exited with code " exitCode)
-            MsgBox(errorMsg, "Monitor Toggle - Error", "IconX")
+            LogMessage("Switch helper exited with code " exitCode " - error saved for overlay display")
             return
         }
     } catch Error as err {
@@ -439,13 +437,33 @@ ToggleControlGroupOverlay(descriptor := "") {
     overlaySettingsCache := overlaySettings
     hotkeySettings := GetHotkeySettings(config)
 
+    ; Check for error from last switch attempt
+    errorFile := repoRoot "\last_error.txt"
+    errorText := ""
+    if FileExist(errorFile) {
+        try {
+            errorText := FileRead(errorFile, "UTF-8")
+        } catch {
+            errorText := ""
+        }
+    }
+
     if (maxIndex <= 0) {
         summary := BuildEmptySummary(hotkeySettings)
+        if (errorText != "") {
+            summary := "⚠️ ERROR ⚠️`n" errorText "`n`n" summary
+        }
         ShowControlGroupOverlay(summary)
         return
     }
 
     summaryText := BuildControlGroupSummary(controlGroups, maxIndex, hotkeySettings)
+    
+    ; Prepend error if present
+    if (errorText != "") {
+        summaryText := "⚠️ ERROR ⚠️`n" errorText "`n`n" summaryText
+    }
+    
     ShowControlGroupOverlay(summaryText)
 }
 

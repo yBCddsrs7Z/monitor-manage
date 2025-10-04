@@ -456,10 +456,15 @@ function Set-DisplayState {
     # Check if ALL required displays are unavailable
     $enableReferences = @(ConvertTo-DisplayReferenceArray $Enable | Where-Object { $_ })
     if ($enableReferences.Count -gt 0 -and $enableResolution.Ids.Length -eq 0) {
-        $errorMsg = "All required displays are unavailable. Cannot apply control group."
+        $errorMsg = "Group $ControlGroup could not be loaded - no active displays available."
         Write-Error $errorMsg
         Write-Log -Message $errorMsg -Level 'ERROR'
-        throw $errorMsg
+        
+        # Write error state for overlay to read
+        $errorFile = Join-Path $repoRoot 'last_error.txt'
+        Set-Content -Path $errorFile -Value $errorMsg -Encoding UTF8
+        
+        exit 1
     }
 
     if ($enableResolution.Ids.Length -eq 0 -and $disableResolution.Ids.Length -eq 0) {
@@ -694,6 +699,12 @@ if ($audioDeviceName) {
 }
 
 Write-Log -Message "Completed switch for control group '$ControlGroup'."
+
+# Clear any previous error state on success
+$errorFile = Join-Path $repoRoot 'last_error.txt'
+if (Test-Path $errorFile) {
+    Remove-Item $errorFile -ErrorAction SilentlyContinue
+}
 
 # Show success notification
 $enabledDisplays = @(ConvertTo-DisplayReferenceArray $groupConfig.activeDisplays | Where-Object { $_ })
