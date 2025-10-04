@@ -397,7 +397,15 @@ SetConfig(controlGroup, descriptor := "") {
     command := Format('powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{1}" -ControlGroup "{2}"', psScript, controlGroup)
 
     try {
-        RunWait(command, , "Hide")    ; Wait for the helper to finish for error propagation.
+        exitCode := RunWait(command, , "Hide")    ; Wait for the helper to finish for error propagation.
+        
+        ; Check if PowerShell script failed
+        if (exitCode != 0) {
+            errorMsg := "Control group " controlGroup " could not be applied.`n`nCheck monitor-toggle.log for details."
+            LogMessage("Switch helper exited with code " exitCode)
+            MsgBox(errorMsg, "Monitor Toggle - Error", "IconX")
+            return
+        }
     } catch Error as err {
         LogMessage("Switch helper failed: " err.Message)
         ShowFatalError("Failed to execute PowerShell helper.`r`n" err.Message)

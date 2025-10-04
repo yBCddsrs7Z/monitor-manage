@@ -453,6 +453,15 @@ function Set-DisplayState {
         Write-Log -Message "Display '$missing' could not be resolved for disabling." -Level 'WARN'
     }
 
+    # Check if ALL required displays are unavailable
+    $enableReferences = @(ConvertTo-DisplayReferenceArray $Enable | Where-Object { $_ })
+    if ($enableReferences.Count -gt 0 -and $enableResolution.Ids.Length -eq 0) {
+        $errorMsg = "All required displays are unavailable. Cannot apply control group."
+        Write-Error $errorMsg
+        Write-Log -Message $errorMsg -Level 'ERROR'
+        throw $errorMsg
+    }
+
     if ($enableResolution.Ids.Length -eq 0 -and $disableResolution.Ids.Length -eq 0) {
         Write-Warning 'No displays were resolved. No display commands were issued.'
         Write-Log -Message 'No displays were resolved; display commands skipped.' -Level 'WARN'
@@ -685,3 +694,35 @@ if ($audioDeviceName) {
 }
 
 Write-Log -Message "Completed switch for control group '$ControlGroup'."
+
+# Show success notification
+$enabledDisplays = @(ConvertTo-DisplayReferenceArray $groupConfig.activeDisplays | Where-Object { $_ })
+$displayNames = ($enabledDisplays | ForEach-Object { Format-DisplayReference $_ }) -join ', '
+$notificationMsg = "Switched to Control Group $ControlGroup"
+if ($displayNames) {
+    $notificationMsg += "`nDisplays: $displayNames"
+}
+if ($audioDeviceName) {
+    $notificationMsg += "`nAudio: $audioDeviceName"
+}
+
+# Use PowerShell Add-Type to show a balloon notification
+try {
+    Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+    
+    $notification = New-Object System.Windows.Forms.NotifyIcon
+    $notification.Icon = [System.Drawing.SystemIcons]::Information
+    $notification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+    $notification.BalloonTipTitle = "Monitor Toggle"
+    $notification.BalloonTipText = $notificationMsg
+    $notification.Visible = $true
+    $notification.ShowBalloonTip(3000)
+    
+    # Clean up after a delay
+    Start-Sleep -Milliseconds 500
+    $notification.Dispose()
+} catch {
+    # Notification failed - not critical, just log it
+    Write-Log -Message "Could not show notification: $_" -Level 'WARN'
+}
