@@ -1775,8 +1775,20 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
 
     Resolve-MissingDisplayIds -Config $config -AvailableDisplays $availableDisplays
 
-    # Auto-generate control groups if config was just created (first run)
-    if ($config.Keys.Count -eq 0 -and $availableDisplays.Count -gt 0) {
+    # Check if control groups are empty (no displays configured)
+    $hasValidGroups = $false
+    foreach ($key in $config.Keys) {
+        $group = $config[$key]
+        $activeCount = @($group.activeDisplays | Where-Object { $_ }).Count
+        $disableCount = @($group.disableDisplays | Where-Object { $_ }).Count
+        if ($activeCount -gt 0 -or $disableCount -gt 0) {
+            $hasValidGroups = $true
+            break
+        }
+    }
+    
+    # Auto-generate control groups if config was just created or all groups are empty
+    if (-not $hasValidGroups -and $availableDisplays.Count -gt 0) {
         if (-not $configExistedBefore) {
             # First run - auto-generate without prompting
             Write-Host "`nAuto-generating default control groups..." -ForegroundColor Cyan
@@ -1787,7 +1799,7 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
             }
         } else {
             # Config existed but is empty - prompt user
-            Write-Host "`nNo control groups found." -ForegroundColor Yellow
+            Write-Host "`nAll control groups are empty." -ForegroundColor Yellow
             if (Read-YesNoResponse "Auto-generate default profiles based on detected displays?" $true) {
                 $config = New-DefaultControlGroups -AvailableDisplays $availableDisplays -AvailableAudio $availableAudio
                 if ($config.Keys.Count -gt 0) {
