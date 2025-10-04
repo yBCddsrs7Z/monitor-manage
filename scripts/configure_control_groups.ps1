@@ -1763,6 +1763,9 @@ function Remove-ControlGroup {
 
 # Main execution flow
 if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
+    # Check if config.json exists before loading
+    $configExistedBefore = Test-Path $configPath
+    
     $config = Get-ConfigData
     Initialize-DevicesSnapshot
     $devices = Get-DeviceInventory
@@ -1772,17 +1775,28 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
 
     Resolve-MissingDisplayIds -Config $config -AvailableDisplays $availableDisplays
 
-    # Offer to auto-generate control groups if none exist
+    # Auto-generate control groups if config was just created (first run)
     if ($config.Keys.Count -eq 0 -and $availableDisplays.Count -gt 0) {
-        Write-Host "`nNo control groups found." -ForegroundColor Yellow
-        if (Read-YesNoResponse "Auto-generate default profiles based on detected displays?" $true) {
+        if (-not $configExistedBefore) {
+            # First run - auto-generate without prompting
+            Write-Host "`nAuto-generating default control groups..." -ForegroundColor Cyan
             $config = New-DefaultControlGroups -AvailableDisplays $availableDisplays -AvailableAudio $availableAudio
             if ($config.Keys.Count -gt 0) {
                 Save-ConfigData -Config $config
-                Write-Host "`nDefault profiles created and saved. You can edit them now or continue." -ForegroundColor Green
+                Write-Host "`nDefault profiles created and saved. You can edit them using the menu." -ForegroundColor Green
             }
         } else {
-            Write-Host "You can add control groups manually using the menu." -ForegroundColor Gray
+            # Config existed but is empty - prompt user
+            Write-Host "`nNo control groups found." -ForegroundColor Yellow
+            if (Read-YesNoResponse "Auto-generate default profiles based on detected displays?" $true) {
+                $config = New-DefaultControlGroups -AvailableDisplays $availableDisplays -AvailableAudio $availableAudio
+                if ($config.Keys.Count -gt 0) {
+                    Save-ConfigData -Config $config
+                    Write-Host "`nDefault profiles created and saved. You can edit them now or continue." -ForegroundColor Green
+                }
+            } else {
+                Write-Host "You can add control groups manually using the menu." -ForegroundColor Gray
+            }
         }
     }
 
