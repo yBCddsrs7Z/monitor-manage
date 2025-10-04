@@ -563,31 +563,8 @@ if ($PSCmdlet.ParameterSetName -eq 'All') {
     Write-Log -Message "Switch requested for profile '$ControlGroup'."
 }
 
-# Show "Activating" notification
-try {
-    Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
-    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
-    
-    $notification = New-Object System.Windows.Forms.NotifyIcon
-    $notification.Icon = [System.Drawing.SystemIcons]::Information
-    $notification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
-    $notification.BalloonTipTitle = "Monitor Toggle"
-    
-    if ($PSCmdlet.ParameterSetName -eq 'All') {
-        $notification.BalloonTipText = "Activating all displays, please wait..."
-    } else {
-        $notification.BalloonTipText = "Activating profile $ControlGroup, please wait..."
-    }
-    
-    $notification.Visible = $true
-    $notification.ShowBalloonTip(2000)
-    
-    # Don't dispose yet - let it show while switching happens
-    # We'll dispose it after the switch completes
-    $global:ActiveNotification = $notification
-} catch {
-    Write-Log -Message "Could not show activation notification: $_" -Level 'WARN'
-}
+# Note: "Activating" notifications now shown by AHK overlay
+# PowerShell notifications kept only for 'All' mode since it's invoked differently
 
 # Execute the appropriate action
 if ($PSCmdlet.ParameterSetName -eq 'All') {
@@ -761,44 +738,4 @@ if (Test-Path $errorFile) {
     Remove-Item $errorFile -ErrorAction SilentlyContinue
 }
 
-# Dispose "Activating" notification before showing success
-if ($global:ActiveNotification) {
-    try {
-        $global:ActiveNotification.Dispose()
-        $global:ActiveNotification = $null
-    } catch {
-        # Ignore disposal errors
-    }
-}
-
-# Show success notification
-$enabledDisplays = @(ConvertTo-DisplayReferenceArray $groupConfig.activeDisplays | Where-Object { $_ })
-$displayNames = ($enabledDisplays | ForEach-Object { Format-DisplayReference $_ }) -join ', '
-$notificationMsg = "Successfully activated profile $ControlGroup"
-if ($displayNames) {
-    $notificationMsg += "`nDisplays: $displayNames"
-}
-if ($audioDeviceName) {
-    $notificationMsg += "`nAudio: $audioDeviceName"
-}
-
-# Use PowerShell Add-Type to show a balloon notification
-try {
-    Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
-    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
-    
-    $notification = New-Object System.Windows.Forms.NotifyIcon
-    $notification.Icon = [System.Drawing.SystemIcons]::Information
-    $notification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
-    $notification.BalloonTipTitle = "Monitor Toggle"
-    $notification.BalloonTipText = $notificationMsg
-    $notification.Visible = $true
-    $notification.ShowBalloonTip(3000)
-    
-    # Clean up after a delay
-    Start-Sleep -Milliseconds 500
-    $notification.Dispose()
-} catch {
-    # Notification failed - not critical, just log it
-    Write-Log -Message "Could not show notification: $_" -Level 'WARN'
-}
+# Note: Success notification now shown by AHK overlay

@@ -394,6 +394,9 @@ SetConfig(controlGroup, descriptor := "") {
         LogMessage("Requested control group " controlGroup)
     }
 
+    ; Show "Activating" notification
+    ShowNotification("Activating profile " controlGroup "...")
+
     ; Resolve and validate the PowerShell helper responsible for applying
     ; monitor/audio configuration changes.
     psScript := scriptsDir "\switch_control_group.ps1"
@@ -408,9 +411,9 @@ SetConfig(controlGroup, descriptor := "") {
         
         ; Check if PowerShell script failed
         if (exitCode != 0) {
-            LogMessage("Switch helper exited with code " exitCode " - error notification shown, overlay closed if visible")
+            LogMessage("Switch helper exited with code " exitCode " - error saved for overlay display")
             
-            ; Close overlay if it's currently visible (error popup replaces it)
+            ; Close any notification overlay
             global overlayVisible, overlayGui
             if (overlayVisible && IsObject(overlayGui)) {
                 try {
@@ -427,6 +430,9 @@ SetConfig(controlGroup, descriptor := "") {
         LogMessage("Switch helper failed: " err.Message)
         ShowFatalError("Failed to execute PowerShell helper.`r`n" err.Message)
     }
+    
+    ; Show success notification
+    ShowNotification("Successfully activated profile " controlGroup)
 
     LogMessage("Completed switch helper for control group " controlGroup)
 
