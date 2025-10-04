@@ -451,7 +451,7 @@ ToggleControlGroupOverlay(descriptor := "") {
     if (maxIndex <= 0) {
         summary := BuildEmptySummary(hotkeySettings)
         if (errorText != "") {
-            summary := "⚠️ ERROR ⚠️`n" errorText "`n`n" summary
+            summary := errorText "`n`n" summary
         }
         ShowControlGroupOverlay(summary)
         return
@@ -461,7 +461,7 @@ ToggleControlGroupOverlay(descriptor := "") {
     
     ; Prepend error if present
     if (errorText != "") {
-        summaryText := "⚠️ ERROR ⚠️`n" errorText "`n`n" summaryText
+        summaryText := errorText "`n`n" summaryText
     }
     
     ShowControlGroupOverlay(summaryText)
