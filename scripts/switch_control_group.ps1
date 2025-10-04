@@ -775,7 +775,7 @@ if ($global:ActiveNotification) {
 # Show success notification
 $enabledDisplays = @(ConvertTo-DisplayReferenceArray $groupConfig.activeDisplays | Where-Object { $_ })
 $displayNames = ($enabledDisplays | ForEach-Object { Format-DisplayReference $_ }) -join ', '
-$notificationMsg = "Switched to Control Group $ControlGroup"
+$notificationMsg = "Successfully activated profile $ControlGroup"
 if ($displayNames) {
     $notificationMsg += "`nDisplays: $displayNames"
 }
