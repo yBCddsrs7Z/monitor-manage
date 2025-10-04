@@ -13,12 +13,13 @@
 
 ; Establish core paths relative to the script directory so the project remains
 ; portable regardless of where it is checked out.
-baseDir := A_ScriptDir
-scriptsDir := baseDir "\scripts"
-active_profile := scriptsDir "\active_profile"
-config_file := baseDir "\config.json"
-log_file := baseDir "\monitor-toggle.log"
-devices_file := baseDir "\devices_snapshot.json"
+global baseDir := A_ScriptDir
+global scriptsDir := baseDir "\scripts"
+global active_profile := scriptsDir "\active_profile"
+global config_file := baseDir "\config.json"
+global log_file := baseDir "\monitor-toggle.log"
+global devices_file := baseDir "\devices_snapshot.json"
+global repoRoot := baseDir  ; Same as baseDir for error file location
 overlayVisible := false
 overlayGui := 0
 overlaySettingsCache := ""

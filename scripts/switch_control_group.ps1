@@ -457,7 +457,7 @@ function Set-DisplayState {
     $enableReferences = @(ConvertTo-DisplayReferenceArray $Enable | Where-Object { $_ })
     if ($enableReferences.Count -gt 0 -and $enableResolution.Ids.Length -eq 0) {
         $displayList = ($enableReferences | ForEach-Object { Format-DisplayReference $_ }) -join ', '
-        $errorMsg = "Control Group $ControlGroup could not be applied.`nRequired displays not available: $displayList"
+        $errorMsg = "Control Group $ControlGroup could not be applied.`nAt least one of these displays must be available: $displayList"
         Write-Error $errorMsg
         Write-Log -Message $errorMsg -Level 'ERROR'
         
