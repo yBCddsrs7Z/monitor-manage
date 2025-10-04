@@ -402,7 +402,19 @@ SetConfig(controlGroup, descriptor := "") {
         
         ; Check if PowerShell script failed
         if (exitCode != 0) {
-            LogMessage("Switch helper exited with code " exitCode " - error saved for overlay display")
+            LogMessage("Switch helper exited with code " exitCode " - error notification shown, overlay closed if visible")
+            
+            ; Close overlay if it's currently visible (error popup replaces it)
+            global overlayVisible, overlayGui
+            if (overlayVisible && IsObject(overlayGui)) {
+                try {
+                    overlayGui.Hide()
+                    overlayVisible := false
+                } catch {
+                    ; Overlay already closed, ignore
+                }
+            }
+            
             return
         }
     } catch Error as err {

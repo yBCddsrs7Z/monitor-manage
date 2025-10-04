@@ -465,6 +465,25 @@ function Set-DisplayState {
         $errorFile = Join-Path $repoRoot 'last_error.txt'
         Set-Content -Path $errorFile -Value $errorMsg -Encoding UTF8
         
+        # Show error notification popup
+        try {
+            Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+            Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+            
+            $notification = New-Object System.Windows.Forms.NotifyIcon
+            $notification.Icon = [System.Drawing.SystemIcons]::Error
+            $notification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Error
+            $notification.BalloonTipTitle = "Monitor Toggle - Error"
+            $notification.BalloonTipText = $errorMsg
+            $notification.Visible = $true
+            $notification.ShowBalloonTip(5000)
+            
+            Start-Sleep -Milliseconds 500
+            $notification.Dispose()
+        } catch {
+            Write-Log -Message "Could not show error notification: $_" -Level 'WARN'
+        }
+        
         exit 1
     }
 
