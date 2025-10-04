@@ -453,17 +453,8 @@ function New-DefaultControlGroups {
         $groupNum++
     }
     
-    # Add an "all displays" profile
-    if ($AvailableDisplays.Count -gt 1) {
-        $config["$groupNum"] = [ordered]@{
-            activeDisplays = @($AvailableDisplays | ForEach-Object { @{ Name = $_.Name; displayId = $_.DisplayId } })
-            disableDisplays = @()
-            audio = $defaultAudio
-        }
-        Write-Host "  Group ${groupNum}: All displays enabled" -ForegroundColor Gray
-    }
-    
     Write-Host "`nGenerated $($config.Keys.Count) default profile(s)." -ForegroundColor Green
+    Write-Host "Note: Use Alt+Shift+8 (panic button) to enable all displays at once." -ForegroundColor Gray
     return $config
 }
 
