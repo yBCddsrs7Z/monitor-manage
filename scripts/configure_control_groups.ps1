@@ -269,16 +269,39 @@ function Get-ConfigData {
 
     $rootMap = ConvertTo-OrderedMap $parsed
 
+    if ($env:MONITOR_MANAGE_DEBUG) {
+        Write-Host "[DEBUG] rootMap keys: $($rootMap.Keys -join ', ')" -ForegroundColor Gray
+        Write-Host "[DEBUG] rootMap['controlGroups'] type: $($rootMap['controlGroups'].GetType().Name)" -ForegroundColor Gray
+        Write-Host "[DEBUG] rootMap['controlGroups'] is null: $($null -eq $rootMap['controlGroups'])" -ForegroundColor Gray
+    }
+
     $script:HotkeySettings = Set-HotkeyGroupDefaults (Merge-OrderedDefaults (ConvertTo-OrderedMap $rootMap['hotkeys']) (Get-DefaultHotkeys))
     $script:OverlaySettings = Merge-OrderedDefaults (ConvertTo-OrderedMap $rootMap['overlay']) (Get-DefaultOverlay)
 
     $controlGroupSource = $rootMap['controlGroups']
+    
+    if ($env:MONITOR_MANAGE_DEBUG) {
+        Write-Host "[DEBUG] controlGroupSource is null: $($null -eq $controlGroupSource)" -ForegroundColor Gray
+        Write-Host "[DEBUG] controlGroupSource is empty: $(-not $controlGroupSource)" -ForegroundColor Gray
+        if ($controlGroupSource) {
+            Write-Host "[DEBUG] controlGroupSource type: $($controlGroupSource.GetType().Name)" -ForegroundColor Gray
+            $cgKeys = $controlGroupSource | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name
+            Write-Host "[DEBUG] controlGroupSource properties: $($cgKeys -join ', ')" -ForegroundColor Gray
+        }
+    }
+    
     if (-not $controlGroupSource) {
+        if ($env:MONITOR_MANAGE_DEBUG) {
+            Write-Host "[DEBUG] controlGroupSource was falsy, checking rootMap keys" -ForegroundColor Gray
+        }
         $controlGroupSource = [ordered]@{}
         foreach ($key in $rootMap.Keys) {
             if ($key -in @('hotkeys', 'overlay', 'controlGroups')) { continue }
             $controlGroupSource[$key] = $rootMap[$key]
         }
+    } else {
+        # Convert to OrderedDictionary if it's a PSCustomObject
+        $controlGroupSource = ConvertTo-OrderedMap $controlGroupSource
     }
 
     $result = [System.Collections.Specialized.OrderedDictionary]::new()
