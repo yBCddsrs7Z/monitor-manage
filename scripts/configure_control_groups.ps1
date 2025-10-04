@@ -405,6 +405,68 @@ function Initialize-DevicesSnapshot {
     }
 }
 
+function New-DefaultControlGroups {
+    param(
+        [array]$AvailableDisplays,
+        [array]$AvailableAudio
+    )
+    
+    if ($AvailableDisplays.Count -eq 0) {
+        Write-Host "No displays detected. Cannot generate default profiles." -ForegroundColor Yellow
+        return [ordered]@{}
+    }
+    
+    Write-Host "`nGenerating default control groups..." -ForegroundColor Cyan
+    
+    $config = [ordered]@{}
+    $groupNum = 1
+    
+    # Get default audio device (first in list or none)
+    $defaultAudio = $null
+    if ($AvailableAudio.Count -gt 0) {
+        $defaultAudio = $AvailableAudio[0].Name
+    }
+    
+    # If only one display, create a simple profile
+    if ($AvailableDisplays.Count -eq 1) {
+        $display = $AvailableDisplays[0]
+        $config["$groupNum"] = [ordered]@{
+            activeDisplays = @(@{ Name = $display.Name; displayId = $display.DisplayId })
+            disableDisplays = @()
+            audio = $defaultAudio
+        }
+        Write-Host "  Group 1: $($display.Name) (single display)" -ForegroundColor Gray
+        return $config
+    }
+    
+    # For multiple displays, create individual profiles (one display at a time)
+    foreach ($display in $AvailableDisplays) {
+        $otherDisplays = $AvailableDisplays | Where-Object { $_.Name -ne $display.Name }
+        
+        $config["$groupNum"] = [ordered]@{
+            activeDisplays = @(@{ Name = $display.Name; displayId = $display.DisplayId })
+            disableDisplays = @($otherDisplays | ForEach-Object { @{ Name = $_.Name; displayId = $_.DisplayId } })
+            audio = $defaultAudio
+        }
+        
+        Write-Host "  Group ${groupNum}: $($display.Name) only" -ForegroundColor Gray
+        $groupNum++
+    }
+    
+    # Add an "all displays" profile
+    if ($AvailableDisplays.Count -gt 1) {
+        $config["$groupNum"] = [ordered]@{
+            activeDisplays = @($AvailableDisplays | ForEach-Object { @{ Name = $_.Name; displayId = $_.DisplayId } })
+            disableDisplays = @()
+            audio = $defaultAudio
+        }
+        Write-Host "  Group ${groupNum}: All displays enabled" -ForegroundColor Gray
+    }
+    
+    Write-Host "`nGenerated $($config.Keys.Count) default profile(s)." -ForegroundColor Green
+    return $config
+}
+
 function Get-DeviceInventory {
     if (-not (Test-Path $snapshotPath)) {
         return @(), @()
@@ -1719,6 +1781,20 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
 
     Resolve-MissingDisplayIds -Config $config -AvailableDisplays $availableDisplays
 
+    # Offer to auto-generate control groups if none exist
+    if ($config.Keys.Count -eq 0 -and $availableDisplays.Count -gt 0) {
+        Write-Host "`nNo control groups found." -ForegroundColor Yellow
+        if (Read-YesNoResponse "Auto-generate default profiles based on detected displays?" $true) {
+            $config = New-DefaultControlGroups -AvailableDisplays $availableDisplays -AvailableAudio $availableAudio
+            if ($config.Keys.Count -gt 0) {
+                Save-ConfigData -Config $config
+                Write-Host "`nDefault profiles created and saved. You can edit them now or continue." -ForegroundColor Green
+            }
+        } else {
+            Write-Host "You can add control groups manually using the menu." -ForegroundColor Gray
+        }
+    }
+
     $dirty = $false
 
     while ($true) {
@@ -1728,6 +1804,7 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
             New-SelectionItem -Label 'Edit existing control group' -Value 'edit'
             New-SelectionItem -Label 'Add new control group' -Value 'add'
             New-SelectionItem -Label 'Remove control group' -Value 'remove'
+            New-SelectionItem -Label 'Generate default profiles' -Value 'generate'
             New-SelectionItem -Label 'Refresh devices snapshot' -Value 'refresh'
             New-SelectionItem -Label 'Save and exit' -Value 'save'
             New-SelectionItem -Label 'Exit without saving' -Value 'exit'
@@ -1777,6 +1854,24 @@ if ($env:MONITOR_MANAGE_SUPPRESS_MAIN -ne '1') {
                 if (Remove-ControlGroup -Config $config) {
                     $dirty = $true
                 }
+            }
+            'generate' {
+                if ($availableDisplays.Count -eq 0) {
+                    Write-Host "No displays detected. Cannot generate profiles." -ForegroundColor Yellow
+                    continue
+                }
+                
+                if ($config.Keys.Count -gt 0) {
+                    Write-Host "`nWarning: This will replace all existing control groups." -ForegroundColor Yellow
+                    if (-not (Read-YesNoResponse "Replace existing control groups with auto-generated defaults?" $false)) {
+                        Write-Host "Generation cancelled." -ForegroundColor Yellow
+                        continue
+                    }
+                }
+                
+                $config = New-DefaultControlGroups -AvailableDisplays $availableDisplays -AvailableAudio $availableAudio
+                $dirty = $true
+                Write-Host "Control groups generated. Review and save when ready." -ForegroundColor Green
             }
             'refresh' {
                 Invoke-DevicesSnapshotExport
