@@ -465,6 +465,16 @@ function Set-DisplayState {
         $errorFile = Join-Path $repoRoot 'last_error.txt'
         Set-Content -Path $errorFile -Value $errorMsg -Encoding UTF8
         
+        # Dispose "Activating" notification before showing error
+        if ($global:ActiveNotification) {
+            try {
+                $global:ActiveNotification.Dispose()
+                $global:ActiveNotification = $null
+            } catch {
+                # Ignore disposal errors
+            }
+        }
+        
         # Show error notification popup
         try {
             Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
@@ -551,6 +561,32 @@ if ($PSCmdlet.ParameterSetName -eq 'All') {
     Write-Log -Message "Switch requested to activate all displays."
 } else {
     Write-Log -Message "Switch requested for control group '$ControlGroup'."
+}
+
+# Show "Activating" notification
+try {
+    Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+    
+    $notification = New-Object System.Windows.Forms.NotifyIcon
+    $notification.Icon = [System.Drawing.SystemIcons]::Information
+    $notification.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+    $notification.BalloonTipTitle = "Monitor Toggle"
+    
+    if ($PSCmdlet.ParameterSetName -eq 'All') {
+        $notification.BalloonTipText = "Activating all displays, please wait..."
+    } else {
+        $notification.BalloonTipText = "Activating Control Group $ControlGroup, please wait..."
+    }
+    
+    $notification.Visible = $true
+    $notification.ShowBalloonTip(2000)
+    
+    # Don't dispose yet - let it show while switching happens
+    # We'll dispose it after the switch completes
+    $global:ActiveNotification = $notification
+} catch {
+    Write-Log -Message "Could not show activation notification: $_" -Level 'WARN'
 }
 
 # Execute the appropriate action
@@ -724,6 +760,16 @@ Write-Log -Message "Completed switch for control group '$ControlGroup'."
 $errorFile = Join-Path $repoRoot 'last_error.txt'
 if (Test-Path $errorFile) {
     Remove-Item $errorFile -ErrorAction SilentlyContinue
+}
+
+# Dispose "Activating" notification before showing success
+if ($global:ActiveNotification) {
+    try {
+        $global:ActiveNotification.Dispose()
+        $global:ActiveNotification = $null
+    } catch {
+        # Ignore disposal errors
+    }
 }
 
 # Show success notification
